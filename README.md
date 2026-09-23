@@ -1,20 +1,28 @@
-# edwindeloso.com V2
+# edwindeloso.com — V2.1 SEO
 
-Static GitHub Pages portfolio.
-
-V2 adds the origin story, condensed career journey, expandable full history, engineering focus, AI-era philosophy, education/certifications, humor, and the aspirational Engineer → Builder → ??? → CEO ending.
-
-This version intentionally leaves EasyRentify and Dad Nova Labs out.
+Updates:
+- Corrected Encora spelling
+- QNET, Inc · Ortigas City
+- Added concise business-domain labels to full career history
+- Allied Bank: International Banking Systems
+- Added YouTube and public contact email
+- Added SEO title/description, canonical URL and robots directive
+- Added Open Graph and social metadata
+- Added Person JSON-LD structured data with LinkedIn, GitHub and YouTube identity links
+- Added robots.txt and sitemap.xml
 
 ## Deploy
 
-Copy the files into your existing `niwdy.github.io` repository and run:
+Copy these files over the existing `niwdy.github.io` repository:
 
 ```powershell
 git status
 git add .
-git commit -m "Build portfolio V2 career journey"
+git commit -m "Update portfolio career domains and SEO"
 git push origin main
 ```
 
-No build step, npm, backend, or database is required.
+After deployment, add `https://edwindeloso.com/` to Google Search Console and submit:
+`https://edwindeloso.com/sitemap.xml`
+
+No npm/build step is required.
