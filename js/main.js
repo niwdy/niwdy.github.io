@@ -1,2 +1,1 @@
-// Intentionally minimal: this portfolio works without JavaScript.
-document.documentElement.classList.add('js');
+const b=document.getElementById('menu'),n=document.querySelector('.nav nav');if(b&&n){b.onclick=()=>n.classList.toggle('open');n.querySelectorAll('a').forEach(a=>a.onclick=()=>n.classList.remove('open'))}document.getElementById('year').textContent=new Date().getFullYear();
