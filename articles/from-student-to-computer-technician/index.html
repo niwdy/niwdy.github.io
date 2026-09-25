@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>From Student to Computer Technician: Lessons From 20+ Years in Software Engineering | Edwin Deloso</title>
+  <meta name="description" content="How working as a computer technician while studying Computer Science taught Edwin Deloso early lessons about business operations, POS systems, production failures, reliability, and lifelong learning.">
+  <meta name="author" content="Edwin Deloso">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#07111b">
+  <link rel="canonical" href="https://edwindeloso.com/articles/from-student-to-computer-technician/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="From Student to Computer Technician: Where My Software Engineering Journey Really Started">
+  <meta property="og:description" content="Lessons about business operations, POS systems, production impact, reliability and lifelong learning from my earliest days in technology.">
+  <meta property="og:url" content="https://edwindeloso.com/articles/from-student-to-computer-technician/">
+  <meta property="og:site_name" content="Edwin Deloso">
+  <meta property="article:published_time" content="2026-09-25">
+  <meta property="article:author" content="Edwin Deloso">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="From Student to Computer Technician | Edwin Deloso">
+  <meta name="twitter:description" content="How a sleepy student technician learned about POS systems, production impact and reliability the memorable way.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "From Student to Computer Technician: Where My Software Engineering Journey Really Started",
+    "description": "How working as a computer technician while studying Computer Science taught Edwin Deloso early lessons about business operations, POS systems, production failures, reliability, and lifelong learning.",
+    "datePublished": "2026-09-25",
+    "dateModified": "2026-09-25",
+    "mainEntityOfPage": "https://edwindeloso.com/articles/from-student-to-computer-technician/",
+    "author": {"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},
+    "publisher": {"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},
+    "keywords": ["software engineering", "computer science student", "computer technician", "POS systems", "Clipper", "reliability engineering", "career lessons"]
+  }
+  </script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="../../">&lt;/&gt; edwindeloso.com</a>
+  <nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#contact">Contact</a></nav>
+</header>
+<main class="article-shell">
+  <a class="article-back" href="../../#notes">← Engineering Notes</a>
+  <header class="article-header">
+    <p class="eyebrow">CAREER · LEARNING · RELIABILITY</p>
+    <h1>From Student to Computer Technician: Where My Software Engineering Journey Really Started</h1>
+    <p class="article-deck">Lessons from studying Computer Science while working with real systems—and discovering very early that when software fails, the business feels it.</p>
+    <div class="article-meta"><span>By Edwin Deloso</span><span>September 25, 2026</span><span>Engineering Notes</span></div>
+  </header>
+  <article class="article-body">
+    <p>Long before I became a software engineer, full-stack developer, or technical lead, I was a Computer Science student trying to understand how computers actually worked outside the classroom.</p>
+    <p>While completing my degree, I was also working as a computer technician. I studied during the day and worked with real computers, networks, servers, users, and business systems after school and at night.</p>
+    <p>Looking back, that experience taught me lessons that stayed with me throughout <strong>20+ years in software engineering</strong>.</p>
+
+    <h2>My classroom continued after school</h2>
+    <p>The technology was very different from what developers use today. This was the era of <strong>DOS, Windows 3.11, Clipper applications, physical network cabling, and servers sitting somewhere inside the building rather than somewhere in the cloud.</strong></p>
+    <p>My work wasn't limited to fixing PCs. I laid UTP network cables, installed and maintained computers, helped install company servers, supported users when something wasn't working, and eventually became involved with the systems and data that helped keep the business operating.</p>
+    <p>University taught me the fundamentals of computing. Work taught me what happens when those computers actually matter to somebody.</p>
+    <blockquote><p><strong>Knowing how something works and making it work in the real world are two different skills.</strong> You need both.</p></blockquote>
+
+    <h2>I was also learning how a business works</h2>
+    <p>Something unexpected happened while I was learning technology: I started learning <strong>business operations</strong>.</p>
+    <p>Working around supermarkets and malls allowed me to see how different parts of the business connected. Customers bought products at the cashier. The POS systems recorded those transactions. Departments generated sales information. Data had to be processed. Reports eventually reached management so they could understand how the business was performing.</p>
+    <p>I began to realize that the computers I was maintaining weren't isolated machines. They were part of a much larger system.</p>
+    <p>And sometimes I learned that lesson the hard way.</p>
+
+    <h2>The night I discovered production impact 😴</h2>
+    <p>Our business applications were built using <strong>Clipper</strong>, and part of our nightly work involved rebuilding indexes. Those indexes needed to be processed properly so the systems would be ready for business the following day.</p>
+    <p>At first, I wasn't running all the processing efficiently across multiple available computers. Some jobs were taking too long.</p>
+    <div class="moment"><p>And one night...</p><p><strong>I fell asleep.</strong></p><p>The indexing didn't finish properly.</p><p>Morning arrived. The supermarket had to open. And some cashier/POS operations weren't working correctly. 😂</p></div>
+    <p>There was no cloud monitoring. No observability dashboard. No automated retry. No Slack notification saying:</p>
+    <blockquote><p>🚨 <strong>Production indexing failed.</strong></p></blockquote>
+    <p>There was just a business preparing to operate and a sleepy Computer Science student eventually realizing:</p>
+    <blockquote><p><strong>“Ah... the indexes.”</strong> 😅</p></blockquote>
+    <p>That was one of my earliest lessons about production systems—years before I knew to call them production systems.</p>
+
+    <h2>The solution wasn't simply “don't fall asleep”</h2>
+    <p>The obvious lesson would have been: <strong>Stay awake next time.</strong></p>
+    <p>But that wasn't really the engineering lesson. The better question was: <strong>Why should an important business process depend on one tired person manually completing everything during the night?</strong></p>
+    <p>I eventually learned to use the available computers more effectively. Instead of processing everything sequentially on a single machine, I could run independent processing across <strong>multiple computers at the same time</strong>.</p>
+    <p>Work finished faster. There was less chance of running out of time. And I learned to verify that the processing had actually completed before the next business day began.</p>
+    <p>I certainly didn't call this parallel processing, automation, resilience, or reliability engineering at the time. I was just trying to make sure the cashiers worked the next morning. 😄</p>
+    <blockquote><p><strong>If an important business process depends entirely on a human remembering to run something every night, eventually that human is going to fall asleep.</strong></p></blockquote>
+
+    <h2>Software isn't really about software</h2>
+    <p>There was another lesson hidden in those nightly jobs. The important thing wasn't the Clipper program. It wasn't the index files. It wasn't even the computers.</p>
+    <p>The important thing was that <strong>the business needed to operate the next morning</strong>. Cashiers needed to serve customers. Departments needed their systems. Management needed accurate sales information. People depended on technology to do their jobs.</p>
+    <blockquote><p><strong>Good software engineering isn't only about making software work. It's about understanding what happens to the business when it doesn't.</strong></p></blockquote>
+    <p>I've carried that lesson through many different industries and generations of technology. The systems became more sophisticated. The business dependency never disappeared.</p>
+
+    <h2>Theory became real</h2>
+    <p>Working while studying also changed how I learned Computer Science. Networking wasn't simply something described in a textbook when I had physically laid network cable and connected machines. Databases and data structures weren't purely academic when business information depended on them.</p>
+    <p>Programming wasn't merely an assignment when someone needed the system to work. And debugging became much more interesting when you couldn't tell the supermarket: <strong>“I'll submit the fix next semester.”</strong> 😄</p>
+    <p>Theory gave me a foundation. Real work gave that theory consequences. The combination taught me faster than either one could have done alone.</p>
+
+    <h2>I didn't have a 20-year career plan</h2>
+    <p>It's easy to look backward at a career and imagine everything was planned. Mine wasn't.</p>
+    <p>I wasn't sitting there as a student thinking: <strong>Computer Technician → Computer Science Instructor → Web Developer → Entrepreneur → Programmer → Senior Engineer → Technical Lead → AI-Assisted Engineering.</strong></p>
+    <p>I was mostly trying to solve whatever problem was in front of me. Then I learned something. That knowledge led to another opportunity. That opportunity introduced another problem. And the cycle continued.</p>
+    <p>The career path only looks organized when you look backward. While you're living it, you're usually just trying to figure out the next thing.</p>
+
+    <h2>From nightly indexing to modern automation</h2>
+    <p>Today, the technology is almost unrecognizable compared with those early systems. We have background workers, schedulers, CI/CD pipelines, health checks, telemetry, distributed processing, automated retries, alerts, cloud infrastructure, and now AI coding agents.</p>
+    <p>But underneath all of that technology are many of the same engineering questions I encountered as a student: What happens when this process fails? Who depends on it? How will we know it failed? Can we recover? Can we automate it? Can we design it so one sleepy human isn't the critical dependency? 😄</p>
+    <p>The tools became dramatically better. The responsibility didn't disappear.</p>
+
+    <h2>A lesson for students starting today</h2>
+    <p>If you're studying Computer Science today, don't worry about knowing every framework, programming language, cloud platform, or AI tool. You won't. Nobody does.</p>
+    <p>Instead, look for opportunities to connect what you're learning with something real. Build something. Repair something. Automate something. Help someone solve a problem. Understand how a business operates. Talk to the people who actually use the software. Break something—then figure out why it broke.</p>
+    <p>Your first experience doesn't need to involve Kubernetes, microservices, cloud architecture, or artificial intelligence.</p>
+    <p>Mine involved <strong>UTP cables, Windows 3.11, Clipper, servers, supermarkets, POS systems, nightly indexing... and occasionally falling asleep.</strong> 😄</p>
+    <p>And somehow, that became the beginning of a career in software engineering.</p>
+
+    <h2>The tools changed. Learning didn't.</h2>
+    <p>If someone had told that young Computer Science student that one day software could be generated by artificial intelligence—and that part of his job would involve reviewing and directing that generated code—I probably wouldn't have believed it.</p>
+    <p>But there's something reassuring about looking back. The technologies changed. The fundamentals didn't.</p>
+    <p>You still need curiosity. You still need to understand the problem. You still need to understand the business. You still need to debug things that don't work. You still need to learn technologies you've never encountered before. And you still need to take responsibility for what you build.</p>
+    <blockquote><p><strong>Don't build your career around a technology. Build your ability to learn.</strong><br>Technologies eventually become legacy systems. The ability to learn doesn't.</p></blockquote>
+
+    <div class="moment"><p><strong>From DOS commands to PowerShell.</strong></p><p><strong>From manual nightly jobs to CI/CD.</strong></p><p><strong>From writing every line of code to reviewing code written by AI.</strong></p><p><em>Somehow, debugging survived every generation.</em> 😄</p></div>
+
+    <div class="closing"><h2>The journey continues</h2><p>My career didn't really begin when someone first gave me a software development title.</p><p>It began while I was still a student—working with real systems, making mistakes, seeing how technology affected a real business, and encountering problems I didn't yet know how to solve.</p><p>More than two decades later, technology is changing faster than ever.</p><p>And I'm still doing essentially the same thing:</p><p><strong>Learning the next thing.</strong></p></div>
+  </article>
+</main>
+<footer class="article-footer"><span>© <span id="year"></span> Edwin Deloso</span><a href="../../">Back to edwindeloso.com →</a></footer>
+<script src="../../js/main.js"></script>
+</body>
+</html>

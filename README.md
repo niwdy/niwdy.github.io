@@ -1,6 +1,9 @@
-# edwindeloso.com — V2.1 SEO
+# edwindeloso.com — V2.2 Engineering Notes
 
 Updates:
+- Added Engineering Notes section and first long-form article
+- Added Article JSON-LD, canonical and social metadata
+- Updated sitemap with article URL
 - Corrected Encora spelling
 - QNET, Inc · Ortigas City
 - Added concise business-domain labels to full career history
