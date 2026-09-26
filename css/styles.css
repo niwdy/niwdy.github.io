@@ -3,3 +3,16 @@
 
 /* V3 personal brand */
 .brand-logo{display:flex;align-items:center;background:#fff;border-radius:7px;padding:4px 8px;line-height:0}.brand-logo img{display:block;width:245px;max-height:48px;object-fit:contain}.hero-slogan{margin:10px 0 0;color:#83c5ff;font-weight:900;letter-spacing:.18em;font-size:.92rem}.notes-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1100px}.note-card{display:flex;flex-direction:column}.note-card a{margin-top:auto;padding-top:12px}.article-brand{display:flex;align-items:center;background:#fff;border-radius:7px;padding:4px 8px;line-height:0}.article-brand img{display:block;width:230px;max-height:46px;object-fit:contain}.next-note{margin-top:55px;padding:26px 28px;border:1px solid #31516b;border-radius:9px;background:#091824}.next-note small{color:#6fbaff;letter-spacing:.12em;font-weight:800}.next-note h2{margin:10px 0}.next-note p{margin-bottom:0}@media(max-width:800px){.notes-grid{grid-template-columns:1fr}.brand-logo img,.article-brand img{width:190px}.nav{padding-inline:3vw}}
+
+/* V3.1 — compact brand treatment */
+.nav{height:76px}
+.brand-logo{flex:0 0 auto;padding:3px 6px;border-radius:5px;overflow:hidden}
+.brand-logo img{width:220px;max-width:30vw;height:auto;max-height:58px;object-fit:contain}
+.article-brand{padding:3px 6px;border-radius:5px;overflow:hidden}
+.article-brand img{width:220px;height:auto;max-height:58px;object-fit:contain}
+@media(max-width:800px){
+  .brand-logo img,.article-brand img{width:170px;max-width:52vw;max-height:48px}
+}
+@media(max-width:420px){
+  .brand-logo img,.article-brand img{width:145px;max-height:42px}
+}

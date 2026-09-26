@@ -28,3 +28,7 @@ git push origin main
 If the rebase reports a conflict, resolve it before pushing. Do not force-push.
 
 No npm/build step is required.
+
+## V3.1 header refinement
+- Reduced the Edwin Deloso brand logo in the site and article headers for better balance with navigation and hero content.
+- Added responsive logo sizing for tablet and mobile layouts.
