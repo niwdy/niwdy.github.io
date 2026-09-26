@@ -37,3 +37,8 @@ No npm/build step is required.
 - Replaced the white-card header logo treatment with a transparent dark-header logo asset.
 - Adjusted the wordmark for dark backgrounds: white Edwin, blue Deloso/ED mark, light tagline.
 - Preserved the compact V3.1 header sizing and responsive behavior.
+
+
+## V3.3
+- Added Engineering Notes No. 3: first startup / ITFamilyCorp, Inc.
+- Added homepage card and sitemap entry.
