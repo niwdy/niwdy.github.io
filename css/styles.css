@@ -23,9 +23,44 @@
 .article-brand img{width:220px;height:auto;max-height:58px;object-fit:contain}
 @media(max-width:800px){.brand-logo img,.article-brand img{width:170px;max-width:52vw;max-height:48px}}
 @media(max-width:520px){.brand-logo img,.article-brand img{width:145px;max-height:42px}}
-.site-logo {
-    width: 220px;
+/* V3.5 logo sizing fix */
+.brand-logo img,
+.article-brand img {
+    width: 280px;
+    max-width: none;
     height: auto;
+    max-height: 70px;
+    object-fit: contain;
+    display: block;
+}
+
+.brand-logo,
+.article-brand {
+    overflow: visible;
+}
+@media (max-width: 800px) {
+    .brand-logo img,
+    .article-brand img {
+        width: 220px;
+        max-width: 70vw;
+        max-height: 60px;
+    }
+}
+
+@media (max-width: 420px) {
+    .brand-logo img,
+    .article-brand img {
+        width: 190px;
+        max-width: 75vw;
+        max-height: 55px;
+    }
+}
+.brand-logo img,
+.article-brand img {
+    width: 245px;
+    height: auto;
+    max-width: none;
+    max-height: none;
     object-fit: contain;
     display: block;
 }
