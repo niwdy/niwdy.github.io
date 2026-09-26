@@ -32,3 +32,8 @@ No npm/build step is required.
 ## V3.1 header refinement
 - Reduced the Edwin Deloso brand logo in the site and article headers for better balance with navigation and hero content.
 - Added responsive logo sizing for tablet and mobile layouts.
+
+### V3.2
+- Replaced the white-card header logo treatment with a transparent dark-header logo asset.
+- Adjusted the wordmark for dark backgrounds: white Edwin, blue Deloso/ED mark, light tagline.
+- Preserved the compact V3.1 header sizing and responsive behavior.

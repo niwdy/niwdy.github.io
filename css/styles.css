@@ -16,3 +16,10 @@
 @media(max-width:420px){
   .brand-logo img,.article-brand img{width:145px;max-height:42px}
 }
+
+/* V3.2 — dark-header transparent brand treatment */
+.brand-logo,.article-brand{background:transparent;padding:0;border-radius:0;overflow:visible}
+.brand-logo img{width:220px;max-width:30vw;height:auto;max-height:58px;object-fit:contain}
+.article-brand img{width:220px;height:auto;max-height:58px;object-fit:contain}
+@media(max-width:800px){.brand-logo img,.article-brand img{width:170px;max-width:52vw;max-height:48px}}
+@media(max-width:520px){.brand-logo img,.article-brand img{width:145px;max-height:42px}}
