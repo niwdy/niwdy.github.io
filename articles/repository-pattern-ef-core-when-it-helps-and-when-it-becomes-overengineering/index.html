@@ -1,0 +1,520 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Repository Pattern with EF Core: When It Helps and When It Becomes Overengineering | Edwin Deloso</title>
+<meta name="description" content="A practical look at the Repository Pattern with EF Core: aggregate boundaries, CQRS, Unit of Work, IQueryable, generic repositories, and when abstraction becomes overengineering.">
+<meta name="author" content="Edwin Deloso"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#07111b">
+<link rel="canonical" href="https://edwindeloso.com/articles/repository-pattern-ef-core-when-it-helps-and-when-it-becomes-overengineering/">
+<meta property="og:type" content="article"><meta property="og:title" content="Repository Pattern with EF Core: When It Helps and When It Becomes Overengineering"><meta property="og:description" content="EF Core already provides repository-like capabilities. So what problem should a repository actually solve?"><meta property="og:url" content="https://edwindeloso.com/articles/repository-pattern-ef-core-when-it-helps-and-when-it-becomes-overengineering/"><meta property="og:site_name" content="Edwin Deloso"><meta property="og:image" content="https://edwindeloso.com/assets/edwindelosologo.png"><meta property="article:published_time" content="2026-09-28"><meta property="article:author" content="Edwin Deloso">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="Repository Pattern with EF Core | Edwin Deloso"><meta name="twitter:description" content="When repositories add real architectural value with EF Core—and when they become ceremony."><meta name="twitter:image" content="https://edwindeloso.com/assets/edwindelosologo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Repository Pattern with EF Core: When It Helps and When It Becomes Overengineering","description":"A practical look at when repositories add architectural value with EF Core and when they become unnecessary abstraction.","datePublished":"2026-09-28","dateModified":"2026-09-28","mainEntityOfPage":"https://edwindeloso.com/articles/repository-pattern-ef-core-when-it-helps-and-when-it-becomes-overengineering/","author":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},"publisher":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},"keywords":[".NET","ASP.NET Core","Entity Framework Core","Clean Architecture","Repository Pattern","CQRS","Domain-Driven Design","Software Architecture"]}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8E6S5GKC9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X8E6S5GKC9');</script>
+<link rel="stylesheet" href="../../css/styles.css"></head><body>
+<header class="nav"><a class="article-brand" href="../../" aria-label="Edwin Deloso — Learning the Next Thing"><img src="../../assets/edwindelosologo.png" alt="Edwin Deloso — Learning the Next Thing"></a><nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#keep-learning">Keep Learning</a><a href="../../#contact">Contact</a></nav></header>
+<main class="article-shell"><a class="article-back" href="../../#keep-learning">← Keep Learning</a><header class="article-header"><p class="eyebrow">.NET · EF CORE · SOFTWARE ARCHITECTURE</p><h1>Repository Pattern with EF Core: When It Helps and When It Becomes Overengineering</h1><p class="article-deck">EF Core already provides many repository-like capabilities. The more useful architectural question is: what problem is another repository actually solving?</p><div class="article-meta"><span>By Edwin Deloso</span><span>September 28, 2026</span><span>Keep Learning · No. 1</span></div></header>
+<article class="article-body technical-article"><p>The Repository Pattern is one of those architectural patterns that
+almost every .NET developer eventually encounters.</p>
+<p>It appears frequently in Clean Architecture examples, Domain-Driven
+Design discussions, enterprise applications, and software architecture
+courses.</p>
+<p>The usual idea sounds reasonable:</p>
+<blockquote>
+<p>Put a repository between your application and your database so your
+business logic does not depend directly on persistence technology.</p>
+</blockquote>
+<p>But once Entity Framework Core enters the picture, things become less
+obvious.</p>
+<p>EF Core already provides many of the capabilities that developers
+traditionally expect from repositories and Unit of Work
+implementations.</p>
+<p>That raises an important architectural question:</p>
+<p><strong>Do we still need repositories when using EF
+Core?</strong></p>
+<p>The answer, in my view, is not simply yes or no.</p>
+<p>The more useful question is:</p>
+<p><strong>What problem is the repository actually solving?</strong></p>
+<hr />
+<h2 id="the-traditional-repository-pattern">The Traditional Repository
+Pattern</h2>
+<p>A common implementation looks something like this:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">interface</span> IRepository<span class="op">&lt;</span>T<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    where T <span class="op">:</span> <span class="kw">class</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Task<span class="op">&lt;</span>T<span class="op">?&gt;</span> <span class="fu">GetByIdAsync</span><span class="op">(</span>Guid id<span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Task<span class="op">&lt;</span>IReadOnlyList<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="fu">GetAllAsync</span><span class="op">();</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> <span class="fu">Add</span><span class="op">(</span>T entity<span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> <span class="fu">Update</span><span class="op">(</span>T entity<span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> <span class="fu">Delete</span><span class="op">(</span>T entity<span class="op">);</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Then every entity gets the same abstraction:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>IRepository<span class="op">&lt;</span>User<span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>IRepository<span class="op">&lt;</span>Order<span class="op">&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>IRepository<span class="op">&lt;</span>Product<span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>IRepository<span class="op">&lt;</span>Customer<span class="op">&gt;</span></span></code></pre></div>
+<p>At first glance, this looks clean.</p>
+<p>The application no longer talks directly to EF Core.</p>
+<p>But there is a potential problem.</p>
+<p>We may simply be recreating functionality that
+<code>DbSet&lt;T&gt;</code> already provides.</p>
+<p>EF Core already supports:</p>
+<ul>
+<li>entity tracking</li>
+<li>querying</li>
+<li>inserts</li>
+<li>updates</li>
+<li>deletes</li>
+<li>change detection</li>
+<li>transactions</li>
+<li>persistence coordination</li>
+</ul>
+<p>If our repository merely forwards calls to
+<code>DbSet&lt;T&gt;</code>, then the abstraction may not be adding much
+architectural value.</p>
+<p>Instead, we may simply be introducing another layer developers need
+to understand, maintain, and test.</p>
+<hr />
+<h2 id="ef-core-already-behaves-like-a-repository">EF Core Already
+Behaves Like a Repository</h2>
+<p>Consider a typical EF Core <code>DbContext</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">sealed</span> <span class="kw">class</span> ApplicationDbContext <span class="op">:</span> DbContext</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> DbSet<span class="op">&lt;</span>Order<span class="op">&gt;</span> Orders <span class="op">{</span> <span class="kw">get</span><span class="op">;</span> <span class="kw">set</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> DbSet<span class="op">&lt;</span>Customer<span class="op">&gt;</span> Customers <span class="op">{</span> <span class="kw">get</span><span class="op">;</span> <span class="kw">set</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> DbSet<span class="op">&lt;</span>Product<span class="op">&gt;</span> Products <span class="op">{</span> <span class="kw">get</span><span class="op">;</span> <span class="kw">set</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Each <code>DbSet&lt;T&gt;</code> already gives us repository-like
+behavior.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Order<span class="op">?</span> order <span class="op">=</span> await dbContext<span class="op">.</span><span class="fu">Orders</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">FirstOrDefaultAsync</span><span class="op">(</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=&gt;</span> x<span class="op">.</span><span class="fu">Id</span> <span class="op">==</span> orderId<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>Adding a generic repository may result in something like this:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Order<span class="op">?</span> order <span class="op">=</span> await orderRepository</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">GetByIdAsync</span><span class="op">(</span>orderId<span class="op">);</span></span></code></pre></div>
+<p>The second version may look cleaner, but we should ask whether the
+abstraction is protecting anything meaningful.</p>
+<p>If the repository simply executes the same EF Core query internally,
+we have added another layer without necessarily improving the
+design.</p>
+<p>This is where repository implementations can become architectural
+ceremony rather than architectural value.</p>
+<hr />
+<h1 id="a-repository-should-represent-domain-intent">A Repository Should
+Represent Domain Intent</h1>
+<p>Repositories become much more useful when they communicate
+<strong>business intent</strong> rather than CRUD operations.</p>
+<p>Instead of this:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Task<span class="op">&lt;</span>Order<span class="op">?&gt;</span> <span class="fu">GetByIdAsync</span><span class="op">(</span>Guid id<span class="op">);</span></span></code></pre></div>
+<p>we might have:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Task<span class="op">&lt;</span>Order<span class="op">?&gt;</span> <span class="fu">GetPendingOrderAsync</span><span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Guid orderId<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    CancellationToken cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>or:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Task<span class="op">&lt;</span>Order<span class="op">?&gt;</span> <span class="fu">GetOrderForCustomerAsync</span><span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    Guid orderId<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Guid customerId<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    CancellationToken cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>Now the repository represents something meaningful in the
+application.</p>
+<p>The abstraction is no longer simply hiding EF Core.</p>
+<p>It is expressing a domain rule.</p>
+<p>That distinction is important.</p>
+<p>A repository should ideally answer questions such as:</p>
+<ul>
+<li>Which aggregate are we loading?</li>
+<li>Under what business conditions?</li>
+<li>Which security or ownership rules apply?</li>
+<li>What persistence behavior should remain consistent?</li>
+</ul>
+<p>That is much more valuable than creating a generic wrapper around
+<code>DbSet&lt;T&gt;</code>.</p>
+<hr />
+<h1 id="repositories-work-well-around-aggregate-boundaries">Repositories
+Work Well Around Aggregate Boundaries</h1>
+<p>This becomes even more important when working with Domain-Driven
+Design.</p>
+<p>Suppose we have an <code>Order</code> aggregate:</p>
+<pre class="text"><code>Order
+ ├── OrderItem
+ ├── ShippingAddress
+ └── PaymentInformation</code></pre>
+<p>It usually does not make sense to create independent repositories for
+every object.</p>
+<p>For example:</p>
+<pre class="text"><code>IOrderRepository
+IOrderItemRepository
+IShippingAddressRepository
+IPaymentInformationRepository</code></pre>
+<p>If <code>OrderItem</code> belongs to the <code>Order</code>
+aggregate, persistence should generally happen through the aggregate
+root.</p>
+<p>A more appropriate boundary may simply be:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">interface</span> IOrderRepository</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    Task<span class="op">&lt;</span>Order<span class="op">?&gt;</span> <span class="fu">GetByIdAsync</span><span class="op">(</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        Guid id<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        CancellationToken cancellationToken<span class="op">);</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> <span class="fu">Add</span><span class="op">(</span>Order order<span class="op">);</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>This reinforces an important principle:</p>
+<p><strong>Repositories should follow domain boundaries, not database
+tables.</strong></p>
+<p>Creating one repository for every table often leads us back toward
+database-driven architecture rather than domain-driven design.</p>
+<hr />
+<h1 id="be-careful-with-iqueryable">Be Careful with IQueryable</h1>
+<p>Another common repository design is:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>IQueryable<span class="op">&lt;</span>Order<span class="op">&gt;</span> <span class="fu">Query</span><span class="op">();</span></span></code></pre></div>
+<p>This initially seems flexible.</p>
+<p>A consumer can now do:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>IQueryable<span class="op">&lt;</span>Order<span class="op">&gt;</span> query <span class="op">=</span> repository<span class="op">.</span><span class="fu">Query</span><span class="op">();</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Order<span class="op">?</span> order <span class="op">=</span> await query</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">Include</span><span class="op">(</span>x <span class="op">=&gt;</span> x<span class="op">.</span><span class="fu">Items</span><span class="op">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">Where</span><span class="op">(</span>x <span class="op">=&gt;</span> x<span class="op">.</span><span class="fu">Status</span> <span class="op">==</span> OrderStatus<span class="op">.</span><span class="fu">Pending</span><span class="op">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">FirstOrDefaultAsync</span><span class="op">();</span></span></code></pre></div>
+<p>But this introduces another problem.</p>
+<p>The repository abstraction now exposes the query provider.</p>
+<p>Application code effectively becomes coupled to EF Core-style
+querying again.</p>
+<p>The repository is no longer controlling persistence behavior.</p>
+<p>Different handlers may start constructing slightly different versions
+of the same business rule.</p>
+<p>One handler might correctly filter pending orders.</p>
+<p>Another might forget the condition.</p>
+<p>Another might load a different set of navigation properties.</p>
+<p>Over time, persistence rules become scattered across the
+application.</p>
+<p>This defeats much of the reason we introduced the repository in the
+first place.</p>
+<p>When repositories are used, I prefer intent-specific operations
+rather than exposing unrestricted <code>IQueryable</code>.</p>
+<hr />
+<h1 id="cqrs-changes-the-repository-discussion">CQRS Changes the
+Repository Discussion</h1>
+<p>The Repository Pattern becomes particularly interesting when CQRS is
+introduced.</p>
+<p>CQRS separates application operations into two categories:</p>
+<pre class="text"><code>Commands → Change state
+
+Queries → Read state</code></pre>
+<p>These two workloads have different requirements.</p>
+<p>Commands usually work with domain behavior and consistency.</p>
+<p>Queries usually care about efficient data retrieval.</p>
+<p>Because of that, they do not necessarily need the same persistence
+strategy.</p>
+<p>A practical architecture might look like this:</p>
+<pre class="text"><code>Command
+   ↓
+Command Handler
+   ↓
+Domain Aggregate
+   ↓
+Repository
+   ↓
+Unit of Work
+   ↓
+Database</code></pre>
+<p>While the query side might look like:</p>
+<pre class="text"><code>Query
+   ↓
+Query Handler
+   ↓
+EF Core / Dapper
+   ↓
+Projection
+   ↓
+DTO</code></pre>
+<p>This is an important architectural distinction.</p>
+<p>We do not have to force every read through a repository simply
+because repositories are used on the write side.</p>
+<hr />
+<h1 id="repositories-are-often-more-valuable-for-commands">Repositories
+Are Often More Valuable for Commands</h1>
+<p>Commands usually change domain state.</p>
+<p>For example:</p>
+<pre class="text"><code>Create Order
+Cancel Order
+Approve Payment
+Complete Shipment</code></pre>
+<p>A command handler may load an aggregate:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>Order<span class="op">?</span> order <span class="op">=</span> await orderRepository</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">GetByIdAsync</span><span class="op">(</span>orderId<span class="op">,</span> cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>Then execute domain behavior:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>order<span class="op">.</span><span class="fu">Cancel</span><span class="op">();</span></span></code></pre></div>
+<p>And finally persist the transaction:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>await unitOfWork<span class="op">.</span><span class="fu">SaveChangesAsync</span><span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>Here, the repository provides a meaningful persistence boundary
+around the domain aggregate.</p>
+<p>That makes sense.</p>
+<p>The application is not simply executing database queries.</p>
+<p>It is loading domain state, executing business behavior, and
+persisting the resulting changes.</p>
+<hr />
+<h1 id="queries-are-different">Queries Are Different</h1>
+<p>Query handlers usually do not need full aggregates.</p>
+<p>Their goal is often to return information efficiently.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>OrderDetailsResponse<span class="op">?</span> order <span class="op">=</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    await dbContext<span class="op">.</span><span class="fu">Orders</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">AsNoTracking</span><span class="op">()</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">Where</span><span class="op">(</span>x <span class="op">=&gt;</span> x<span class="op">.</span><span class="fu">Id</span> <span class="op">==</span> request<span class="op">.</span><span class="fu">OrderId</span><span class="op">)</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">Select</span><span class="op">(</span>x <span class="op">=&gt;</span> <span class="kw">new</span> OrderDetailsResponse</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>            Id <span class="op">=</span> x<span class="op">.</span><span class="fu">Id</span><span class="op">,</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>            CustomerName <span class="op">=</span> x<span class="op">.</span><span class="fu">Customer</span><span class="op">.</span><span class="fu">Name</span><span class="op">,</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>            TotalAmount <span class="op">=</span> x<span class="op">.</span><span class="fu">TotalAmount</span><span class="op">,</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>            Status <span class="op">=</span> x<span class="op">.</span><span class="fu">Status</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">FirstOrDefaultAsync</span><span class="op">(</span>cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>This query does not need to reconstruct the entire <code>Order</code>
+aggregate.</p>
+<p>It simply retrieves the exact data required by the API.</p>
+<p>Adding a repository abstraction here might produce unnecessary
+complexity.</p>
+<p>For read-heavy workloads, direct projections through EF Core or tools
+such as Dapper can often be simpler and more efficient.</p>
+<p>This leads to a practical rule I find useful:</p>
+<blockquote>
+<p><strong>Use repositories for domain-oriented writes, and use
+optimized query models for reads.</strong></p>
+</blockquote>
+<p>This is not a universal rule.</p>
+<p>But it is a useful default when combining CQRS, Clean Architecture,
+EF Core, and Domain-Driven Design.</p>
+<hr />
+<h1 id="unit-of-work-still-matters">Unit of Work Still Matters</h1>
+<p>Another concept frequently associated with repositories is the Unit
+of Work pattern.</p>
+<p>The Unit of Work coordinates multiple persistence operations and
+commits them as one transaction.</p>
+<p>EF Core’s <code>DbContext</code> already behaves similarly to a Unit
+of Work.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>orderRepository<span class="op">.</span><span class="fu">Add</span><span class="op">(</span>order<span class="op">);</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>paymentRepository<span class="op">.</span><span class="fu">Add</span><span class="op">(</span>payment<span class="op">);</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>await unitOfWork<span class="op">.</span><span class="fu">SaveChangesAsync</span><span class="op">(</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    cancellationToken<span class="op">);</span></span></code></pre></div>
+<p>The important idea is that repositories generally should not
+independently call <code>SaveChanges()</code> every time an entity
+changes.</p>
+<p>For example, I would avoid designing repositories like this:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>await orderRepository<span class="op">.</span><span class="fu">AddAndSaveAsync</span><span class="op">(</span>order<span class="op">);</span></span></code></pre></div>
+<p>because it makes transaction boundaries harder to control.</p>
+<p>Suppose one operation needs to:</p>
+<pre class="text"><code>Create Order
+Create Payment Record
+Update Inventory
+Write Outbox Message</code></pre>
+<p>These changes may need to succeed or fail together.</p>
+<p>One transaction boundary makes that behavior much easier to reason
+about.</p>
+<hr />
+<h1 id="dont-add-repositories-just-to-replace-ef-core-someday">Don’t Add
+Repositories Just to Replace EF Core Someday</h1>
+<p>Another argument often used for repositories is:</p>
+<blockquote>
+<p>“If we use repositories, we can easily replace EF Core later.”</p>
+</blockquote>
+<p>Technically, repositories can reduce some direct dependencies.</p>
+<p>But replacing an ORM is rarely as simple as swapping one
+implementation.</p>
+<p>Different persistence technologies have different:</p>
+<ul>
+<li>query capabilities</li>
+<li>transaction semantics</li>
+<li>concurrency models</li>
+<li>relationship handling</li>
+<li>performance characteristics</li>
+<li>mapping strategies</li>
+</ul>
+<p>Changing from EF Core to another ORM or database usually requires
+more than replacing a repository implementation.</p>
+<p>Because of that, I do not consider hypothetical ORM replacement alone
+a strong reason to introduce repositories.</p>
+<p>Architectural abstractions should usually solve a problem we actually
+have.</p>
+<hr />
+<h1 id="the-cost-of-abstractions">The Cost of Abstractions</h1>
+<p>Every abstraction has a maintenance cost.</p>
+<p>Adding repositories may introduce:</p>
+<pre class="text"><code>Repository interface
+Repository implementation
+Dependency injection registration
+Mocks or test substitutes
+Additional method definitions
+Additional navigation between files</code></pre>
+<p>That cost may be completely justified.</p>
+<p>But we should expect something valuable in return.</p>
+<p>A useful repository might give us:</p>
+<ul>
+<li>domain boundaries</li>
+<li>consistent aggregate loading</li>
+<li>ownership rules</li>
+<li>security rules</li>
+<li>transaction consistency</li>
+<li>persistence encapsulation</li>
+<li>clearer command-side architecture</li>
+</ul>
+<p>If we are not getting those benefits, the repository may simply be
+adding another layer.</p>
+<hr />
+<h1 id="avoid-the-generic-repository-trap">Avoid the Generic Repository
+Trap</h1>
+<p>One pattern I now approach carefully is the universal generic
+repository.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>IRepository<span class="op">&lt;</span>T<span class="op">&gt;</span></span></code></pre></div>
+<p>used by every domain object.</p>
+<p>It certainly reduces duplicated CRUD code.</p>
+<p>But reducing duplicated CRUD code is not necessarily the same as
+improving architecture.</p>
+<p>Different aggregates often have very different retrieval
+requirements.</p>
+<p>For example:</p>
+<pre class="text"><code>Order
+Customer
+Invoice
+Subscription</code></pre>
+<p>Each may have different domain rules, relationships, ownership rules,
+and consistency requirements.</p>
+<p>Trying to squeeze all of them into:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">GetById</span><span class="op">()</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">GetAll</span><span class="op">()</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Add</span><span class="op">()</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">Update</span><span class="op">()</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">Delete</span><span class="op">()</span></span></code></pre></div>
+<p>can hide meaningful differences.</p>
+<p>Sometimes a small amount of explicit code produces a much clearer
+architecture.</p>
+<hr />
+<h1 id="my-practical-rule">My Practical Rule</h1>
+<p>When deciding whether to introduce a repository, I now ask:</p>
+<p><strong>What architectural boundary is this repository
+protecting?</strong></p>
+<p>If the answer is only:</p>
+<blockquote>
+<p>“I don’t want the application to see DbContext.”</p>
+</blockquote>
+<p>that may not be enough.</p>
+<p>But if the answer is:</p>
+<blockquote>
+<p>“This repository controls how an aggregate is loaded, protects
+important business constraints, and defines a clear persistence
+boundary.”</p>
+</blockquote>
+<p>then the abstraction probably has real value.</p>
+<p>My preferred mental model looks something like this:</p>
+<pre class="text"><code>Commands
+   ↓
+Domain / Aggregates
+   ↓
+Repositories
+   ↓
+Unit of Work
+   ↓
+EF Core</code></pre>
+<p>while reads can remain:</p>
+<pre class="text"><code>Queries
+   ↓
+EF Core / Dapper
+   ↓
+Projection
+   ↓
+Response DTO</code></pre>
+<p>This keeps the architecture intentional without forcing every
+database operation through the same abstraction.</p>
+<hr />
+<h1 id="patterns-are-tools-not-rules">Patterns Are Tools, Not Rules</h1>
+<p>Perhaps the bigger lesson here is not really about repositories.</p>
+<p>It is about architectural patterns in general.</p>
+<p>Clean Architecture, CQRS, Domain-Driven Design, Repository Pattern,
+Unit of Work, Mediator, Outbox, Specification Pattern, and similar
+techniques are tools.</p>
+<p>They solve particular problems.</p>
+<p>The goal should not be to use as many patterns as possible.</p>
+<p>The goal should be to create software that is:</p>
+<ul>
+<li>understandable</li>
+<li>maintainable</li>
+<li>testable</li>
+<li>secure</li>
+<li>evolvable</li>
+</ul>
+<p>Sometimes that requires another abstraction.</p>
+<p>Sometimes the cleaner architecture is the one with fewer
+abstractions.</p>
+<p>The challenge is learning to recognize the difference.</p>
+<hr />
+<h1 id="final-thoughts">Final Thoughts</h1>
+<p>The Repository Pattern is neither obsolete nor mandatory when using
+Entity Framework Core.</p>
+<p>Used poorly, it can become another layer that merely duplicates EF
+Core.</p>
+<p>Used intentionally, it can provide a valuable boundary around domain
+aggregates and application behavior.</p>
+<p>The distinction comes down to purpose.</p>
+<p>Instead of asking:</p>
+<blockquote>
+<p><strong>Should every EF Core application use
+repositories?</strong></p>
+</blockquote>
+<p>I think a better question is:</p>
+<blockquote>
+<p><strong>What problem would a repository solve in this part of my
+architecture?</strong></p>
+</blockquote>
+<p>If there is a clear answer, use it.</p>
+<p>If there isn’t, EF Core may already provide everything you need.</p>
+<hr />
+<h2 id="further-learning">Further Learning</h2>
+<p>A significant part of how I approach these architectural decisions
+comes from continuously studying experienced .NET developers and
+software architects, including Milan Jovanović’s material on Clean
+Architecture, Domain-Driven Design, CQRS, EF Core, and modern .NET
+application architecture.</p>
+<p>If you want to explore these topics in more depth, you can check out
+Milan Jovanović’s courses here:</p>
+<p><strong><a href="https://milanjovanovic.tech/courses" rel="noopener noreferrer">Milan Jovanović — .NET and Software Architecture Courses</a></strong></p>
+<p><em>Disclosure: Some links on this page may be affiliate links. If
+you purchase through one of these links, I may receive a commission at
+no additional cost to you. The opinions and architectural conclusions in
+this article are my own and are based on my learning and practical
+experience.</em></p>
+<hr />
+<p class="article-tags"><strong>Tags:</strong> .NET, ASP.NET Core, Entity Framework Core,
+Clean Architecture, Repository Pattern, CQRS, Domain-Driven Design,
+Software Architecture</p>
+</article></main>
+<footer class="article-footer"><span>© <span id="year"></span> Edwin Deloso · Learning the Next Thing.</span><a href="../../#keep-learning">More Keep Learning →</a></footer><script src="../../js/main.js"></script></body></html>

@@ -53,3 +53,6 @@
         max-width:70vw;
     }
 }
+
+/* Keep Learning technical articles */
+.learning-card{border-color:#31516b}.technical-article pre{overflow-x:auto;background:#06121c;border:1px solid #29445a;border-radius:8px;padding:20px;margin:24px 0}.technical-article code{font-family:Consolas,"Courier New",monospace;font-size:.92em}.technical-article p code,.technical-article li code{background:#102130;border:1px solid #29445a;border-radius:4px;padding:2px 5px;color:#b9dcff}.technical-article ul{color:#b6c4d0;line-height:1.7}.technical-article hr{border:0;border-top:1px solid #294155;margin:48px 0}.technical-article a{color:#86c6ff;text-decoration:underline}.technical-article .disclosure{font-size:.92rem;border-left:3px solid #31516b;padding-left:16px}.article-tags{margin-top:40px;padding-top:20px;border-top:1px solid #294155}.learning-grid{grid-template-columns:minmax(0,760px)}
