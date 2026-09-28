@@ -56,3 +56,13 @@
 
 /* Keep Learning technical articles */
 .learning-card{border-color:#31516b}.technical-article pre{overflow-x:auto;background:#06121c;border:1px solid #29445a;border-radius:8px;padding:20px;margin:24px 0}.technical-article code{font-family:Consolas,"Courier New",monospace;font-size:.92em}.technical-article p code,.technical-article li code{background:#102130;border:1px solid #29445a;border-radius:4px;padding:2px 5px;color:#b9dcff}.technical-article ul{color:#b6c4d0;line-height:1.7}.technical-article hr{border:0;border-top:1px solid #294155;margin:48px 0}.technical-article a{color:#86c6ff;text-decoration:underline}.technical-article .disclosure{font-size:.92rem;border-left:3px solid #31516b;padding-left:16px}.article-tags{margin-top:40px;padding-top:20px;border-top:1px solid #294155}.learning-grid{grid-template-columns:minmax(0,760px)}
+
+
+/* Professional feedback — brief, anonymized evidence from 2026 reviews */
+.evidence-section{position:relative}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:28px;max-width:1100px}
+.evidence-card{margin:0;padding:24px;border:1px solid #31516b;border-radius:9px;background:#091824}
+.evidence-card p{margin:0 0 18px;color:#e7f0f7;font-size:1.05rem;line-height:1.65}
+.evidence-card footer{color:#83c5ff;font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.evidence-note{max-width:920px;margin-top:24px;color:#8fa2b2;font-size:.9rem;line-height:1.65}
+@media(max-width:800px){.evidence-grid{grid-template-columns:1fr}}
