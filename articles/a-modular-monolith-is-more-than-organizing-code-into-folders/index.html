@@ -1,0 +1,326 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A Modular Monolith Is More Than Organizing Code Into Folders | Edwin Deloso</title>
+<meta name="description" content="A practical look at what makes a module meaningful: ownership of behavior, composition, persistence, data, and use-case boundaries.">
+<meta name="author" content="Edwin Deloso"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#07111b">
+<link rel="canonical" href="https://edwindeloso.com/articles/a-modular-monolith-is-more-than-organizing-code-into-folders/">
+<meta property="og:type" content="article"><meta property="og:title" content="A Modular Monolith Is More Than Organizing Code Into Folders"><meta property="og:description" content="A folder doesn't create a module. Ownership does. A practical look at boundaries in a modular monolith."><meta property="og:url" content="https://edwindeloso.com/articles/a-modular-monolith-is-more-than-organizing-code-into-folders/"><meta property="og:site_name" content="Edwin Deloso"><meta property="og:image" content="https://edwindeloso.com/assets/edwindelosologo.png"><meta property="article:published_time" content="2026-10-01"><meta property="article:author" content="Edwin Deloso">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="A Modular Monolith Is More Than Organizing Code Into Folders | Edwin Deloso"><meta name="twitter:description" content="Modularity isn't primarily about where code lives. It's about who owns what."><meta name="twitter:image" content="https://edwindeloso.com/assets/edwindelosologo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"A Modular Monolith Is More Than Organizing Code Into Folders","description":"A practical look at what makes a module meaningful: ownership of behavior, composition, persistence, data, and use-case boundaries.","datePublished":"2026-10-01","dateModified":"2026-10-01","mainEntityOfPage":"https://edwindeloso.com/articles/a-modular-monolith-is-more-than-organizing-code-into-folders/","author":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},"publisher":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},"keywords":[".NET","ASP.NET Core","Modular Monolith","Vertical Slice Architecture","Entity Framework Core","Software Architecture"]}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8E6S5GKC9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X8E6S5GKC9');</script>
+<link rel="stylesheet" href="../../css/styles.css"></head><body>
+<header class="nav"><a class="article-brand" href="../../" aria-label="Edwin Deloso — Learning the Next Thing"><img src="../../assets/edwindelosologo.png" alt="Edwin Deloso — Learning the Next Thing"></a><nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#keep-learning">Keep Learning</a><a href="../../#contact">Contact</a></nav></header>
+<main class="article-shell"><a class="article-back" href="../../#keep-learning">← Keep Learning</a><header class="article-header"><p class="eyebrow">.NET · MODULAR MONOLITH · SOFTWARE ARCHITECTURE</p><h1>A Modular Monolith Is More Than Organizing Code Into Folders</h1><p class="article-deck">A folder doesn't create a module. Ownership does. What matters is who owns the behavior, composition, persistence, and data.</p><div class="article-meta"><span>By Edwin Deloso</span><span>October 1, 2026</span><span>Keep Learning · No. 2</span></div></header>
+<article class="article-body technical-article"><p>The first thing many developers notice about a modular monolith is
+the folder structure.</p>
+<p>You see something like:</p>
+<pre class="text"><code>Modules/
+  Events/
+  Users/
+  Ticketing/</code></pre>
+<p>and it looks straightforward.</p>
+<p>Create some folders. Put related features together. Call them
+modules.</p>
+<p>But while revisiting modular monolith architecture, one thing became
+clearer to me:</p>
+<blockquote>
+<p><strong>A folder doesn’t create a module. Ownership
+does.</strong></p>
+</blockquote>
+<p>A meaningful module should own more than the location of its source
+files. It should establish boundaries around its behavior, composition,
+persistence, and data.</p>
+<p>That distinction sounds small. Architecturally, it isn’t.</p>
+<hr />
+<h2 id="the-application-host-shouldnt-know-everything">The application
+host shouldn’t know everything</h2>
+<p>Consider a host application with an Events module.</p>
+<p>The application’s startup can remain remarkably small:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>builder<span class="op">.</span><span class="fu">Services</span><span class="op">.</span><span class="fu">AddEventsModule</span><span class="op">(</span>builder<span class="op">.</span><span class="fu">Configuration</span><span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>WebApplication app <span class="op">=</span> builder<span class="op">.</span><span class="fu">Build</span><span class="op">();</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>EventsModule<span class="op">.</span><span class="fu">MapEndpoints</span><span class="op">(</span>app<span class="op">);</span></span></code></pre></div>
+<p>The host knows that an Events module exists, but it doesn’t need to
+know every implementation detail inside that module.</p>
+<p>The module itself can own its registration and endpoint mapping.
+Instead of allowing <code>Program.cs</code> to gradually become the
+place where every feature registers its database, services, endpoints,
+handlers, and infrastructure, the module encapsulates those details.</p>
+<p>The host becomes the <strong>composition root for modules</strong>,
+rather than the place where every implementation detail in the system is
+wired together.</p>
+<p>That’s a subtle but useful distinction.</p>
+<hr />
+<h2 id="data-ownership-is-part-of-modularity">Data ownership is part of
+modularity</h2>
+<p>The more interesting part comes when persistence enters the
+picture.</p>
+<p>A module can have its own <code>DbContext</code> and its own database
+schema:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">sealed</span> <span class="kw">class</span> <span class="fu">EventsDbContext</span><span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    DbContextOptions<span class="op">&lt;</span>EventsDbContext<span class="op">&gt;</span> options<span class="op">)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="fu">DbContext</span><span class="op">(</span>options<span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">internal</span> DbSet<span class="op">&lt;</span>Event<span class="op">&gt;</span> Events <span class="op">{</span> <span class="kw">get</span><span class="op">;</span> <span class="kw">set</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnModelCreating</span><span class="op">(</span>ModelBuilder modelBuilder<span class="op">)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        modelBuilder<span class="op">.</span><span class="fu">HasDefaultSchema</span><span class="op">(</span>Schemas<span class="op">.</span><span class="fu">Events</span><span class="op">);</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Notice what is happening.</p>
+<p>The module doesn’t merely own some C# classes. It owns a persistence
+boundary.</p>
+<p>Its tables can live under an <code>events</code> database schema, and
+its persistence configuration stays with the module.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Application
+│
+├── Events Module
+│   ├── Events behavior
+│   ├── Events endpoints
+│   ├── EventsDbContext
+│   └── events schema
+│
+├── Users Module
+│   └── ...
+│
+└── Ticketing Module
+    └── ...</code></pre>
+<p>The modules may still use the same physical PostgreSQL database.
+That’s one of the practical advantages of a modular monolith: we don’t
+immediately pay the operational cost of distributed services.</p>
+<p>But logically, we’re beginning to establish ownership.</p>
+<p>That leads to a question I find more useful than simply asking
+whether a class is in the correct folder:</p>
+<blockquote>
+<p><strong>Which module owns this data?</strong></p>
+</blockquote>
+<p>If the answer isn’t clear, the module boundary probably isn’t clear
+either.</p>
+<hr />
+<h2 id="modular-doesnt-automatically-mean-distributed">Modular doesn’t
+automatically mean distributed</h2>
+<p>This is where modular monoliths become particularly interesting.</p>
+<p>We can establish meaningful boundaries without immediately
+introducing separate services, message brokers, service discovery,
+network failure modes, distributed tracing, and deployment
+coordination.</p>
+<p>Instead, we can retain a single deployable application while creating
+internal business boundaries.</p>
+<pre class="text"><code>                Application
+                     │
+        ┌────────────┼────────────┐
+        │            │            │
+      Events       Users       Ticketing
+        │            │            │
+        └────────────┼────────────┘
+                     │
+                 Database</code></pre>
+<p>That’s why I increasingly think the interesting question isn’t
+simply:</p>
+<blockquote>
+<p>Monolith or microservices?</p>
+</blockquote>
+<p>It’s:</p>
+<blockquote>
+<p><strong>How well defined are the boundaries of the
+system?</strong></p>
+</blockquote>
+<p>A badly structured monolith can become painful. But distributing
+poorly defined boundaries across multiple services doesn’t magically fix
+them.</p>
+<p>Sometimes it simply turns unclear boundaries into network calls.</p>
+<hr />
+<h2 id="modules-and-vertical-slices-solve-different-problems">Modules
+and vertical slices solve different problems</h2>
+<p>Another useful idea appears in how use cases can be organized inside
+a module.</p>
+<p>Instead of organizing everything primarily by technical type:</p>
+<pre class="text"><code>Controllers/
+Services/
+Repositories/
+DTOs/</code></pre>
+<p>we can organize around use cases:</p>
+<pre class="text"><code>Events/
+  CreateEvent.cs
+  GetEvent.cs</code></pre>
+<p>This starts to look like <strong>Vertical Slice
+Architecture</strong>.</p>
+<p>And this is where two architectural ideas that are sometimes
+discussed separately fit together nicely.</p>
+<p>A module defines a <strong>business boundary</strong>.</p>
+<p>A vertical slice defines a <strong>use-case boundary inside that
+business capability</strong>.</p>
+<pre class="text"><code>Events Module
+│
+├── Create Event
+├── Get Event
+├── Publish Event
+└── Cancel Event</code></pre>
+<p>The two concepts aren’t competing architectures. They operate at
+different levels.</p>
+<p>The module answers:</p>
+<blockquote>
+<p><strong>Where does this business capability belong?</strong></p>
+</blockquote>
+<p>The vertical slice answers:</p>
+<blockquote>
+<p><strong>What does this particular use case need?</strong></p>
+</blockquote>
+<p>I find that mental model much easier to reason about than forcing
+every application into horizontal technical layers.</p>
+<hr />
+<h2 id="reads-dont-always-need-the-domain-model">Reads don’t always need
+the domain model</h2>
+<p>A query can also project directly into the response it needs:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode csharp"><code class="sourceCode cs"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>EventResponse<span class="op">?</span> @event <span class="op">=</span> await context<span class="op">.</span><span class="fu">Events</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">Where</span><span class="op">(</span>e <span class="op">=&gt;</span> e<span class="op">.</span><span class="fu">Id</span> <span class="op">==</span> id<span class="op">)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">Select</span><span class="op">(</span>e <span class="op">=&gt;</span> <span class="kw">new</span> <span class="fu">EventResponse</span><span class="op">(</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">Id</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">Title</span><span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">Description</span><span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">Location</span><span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">StartsAtUtc</span><span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        e<span class="op">.</span><span class="fu">EndsAtUtc</span><span class="op">))</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">SingleOrDefaultAsync</span><span class="op">();</span></span></code></pre></div>
+<p>That’s worth noticing.</p>
+<p>For a read operation, the objective is often simply the data required
+by the caller. We don’t necessarily need to reconstruct a rich domain
+object merely to return a DTO.</p>
+<p>This connects with something I wrote about previously when discussing
+the <strong>Repository Pattern with EF Core</strong>.</p>
+<p>Reads and writes don’t necessarily have the same requirements.</p>
+<p>A write operation may need:</p>
+<pre class="text"><code>Command
+   ↓
+Domain behavior
+   ↓
+Aggregate
+   ↓
+Persistence</code></pre>
+<p>while a read operation may be perfectly comfortable with:</p>
+<pre class="text"><code>Query
+   ↓
+EF Core
+   ↓
+Projection
+   ↓
+DTO</code></pre>
+<p>The important part is not forcing both paths through identical
+abstractions simply because symmetry looks architecturally pleasing.</p>
+<hr />
+<h2 id="you-dont-need-every-abstraction-on-day-one">You don’t need every
+abstraction on day one</h2>
+<p>There’s another lesson in what a first module <em>doesn’t</em>
+need.</p>
+<p>It doesn’t need a generic repository around every entity. It doesn’t
+need an interface for every class. It doesn’t need an elaborate mediator
+pipeline or dozens of projects representing architectural layers.</p>
+<p>And yet meaningful boundaries can already start forming.</p>
+<p>That reinforces another lesson for me:</p>
+<blockquote>
+<p><strong>Good architecture doesn’t require implementing every pattern
+on day one.</strong></p>
+</blockquote>
+<p>Architecture can evolve as the system earns complexity.</p>
+<p>Start by protecting the boundaries that already matter. Introduce
+additional abstractions when they solve an actual problem.</p>
+<p>This is something experienced developers can occasionally forget
+because we already know many patterns.</p>
+<p>Knowing a pattern makes it tempting to use it.</p>
+<p>That doesn’t mean the application needs it yet.</p>
+<hr />
+<h2 id="the-database-can-be-shared-without-the-data-becoming-shared">The
+database can be shared without the data becoming shared</h2>
+<p>One of the most important distinctions in a modular monolith is
+between <strong>sharing infrastructure</strong> and <strong>sharing
+ownership</strong>.</p>
+<p>Two modules may physically store their tables in the same PostgreSQL
+database. That does not necessarily mean every module should freely
+manipulate every table.</p>
+<p>The physical deployment might be:</p>
+<pre class="text"><code>PostgreSQL
+│
+├── events schema
+├── users schema
+└── ticketing schema</code></pre>
+<p>But logically:</p>
+<pre class="text"><code>Events    → owns Events data
+Users     → owns Users data
+Ticketing → owns Ticketing data</code></pre>
+<p>That distinction matters.</p>
+<p>Otherwise, the application may look modular in the solution explorer
+while remaining tightly coupled through the database.</p>
+<p>That’s what I think of as a <strong>folder-based modular
+monolith</strong>.</p>
+<p>It looks modular. The dependencies tell a different story.</p>
+<hr />
+<h2 id="the-question-im-starting-to-ask">The question I’m starting to
+ask</h2>
+<p>When reviewing an architecture, I’m finding this question
+increasingly useful:</p>
+<blockquote>
+<p><strong>What does this module actually own?</strong></p>
+</blockquote>
+<p>Not merely which folder contains a class, or which project should
+contain an interface, but what behavior and data the module owns, how it
+is composed, what other modules can access, and eventually how those
+modules should communicate.</p>
+<p>Those questions tell us much more about modularity than the folder
+structure does.</p>
+<p>And as the application grows, the answers become increasingly
+important.</p>
+<hr />
+<h2 id="what-i-took-away-from-building-the-first-module">What I took
+away from building the first module</h2>
+<p>The first module of a modular monolith doesn’t need to demonstrate
+every sophisticated architectural pattern.</p>
+<p>It needs to establish the beginning of
+<strong>ownership</strong>.</p>
+<p>The application host composes modules. The module owns its endpoints
+and persistence configuration. The module begins owning its data. Use
+cases can be organized vertically inside that boundary. Reads can
+project directly to the models they require. Additional abstractions can
+arrive when the system actually needs them.</p>
+<p>The lesson I’m taking away is simple:</p>
+<blockquote>
+<p><strong>Modularity isn’t primarily about where code lives. It’s about
+who owns what.</strong></p>
+</blockquote>
+<p>Folders can help communicate that architecture. Projects can help
+enforce it. Database schemas can reinforce it.</p>
+<p>But none of those things create the boundary by themselves.</p>
+<p>The boundary becomes meaningful when the system has a clear answer
+to:</p>
+<blockquote>
+<p><strong>Who owns this?</strong></p>
+</blockquote>
+<p>And that’s a question worth asking long before deciding whether a
+system needs microservices.</p>
+<hr />
+<h2 id="further-learning">Further Learning</h2>
+<p>This article was inspired by concepts I’m revisiting while studying
+<strong>Milan Jovanović’s Modular Monolith Architecture</strong> course
+and thinking about how those ideas apply to systems I build and
+maintain.</p>
+<p>The course provides the learning context; the observations and
+conclusions here are my own interpretation of those concepts.</p>
+<p><strong><a href="https://www.courses.milanjovanovic.tech/a/aff_l825rpg0/external?affcode=1486372_z5q14p4o" rel="noopener noreferrer">Explore
+Milan Jovanović’s Modular Monolith Architecture course
+→<</a></strong></p>
+
+<p><em>Disclosure: The course link above is an affiliate link. If you
+purchase through it, I may earn a commission at no additional cost to
+you. I’ve personally enrolled in Milan’s architecture courses and use
+them as part of my continuing software architecture learning.</em></p>
+<p><strong>Learning the Next Thing.</strong></p>
+</article></main>
+<footer class="article-footer"><span>© 2026 Edwin Deloso</span><a href="../../#keep-learning">More Keep Learning notes →</a></footer>
+</body></html>
