@@ -1,0 +1,170 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cross-Cutting Concerns Shouldn't Pollute Your Use Cases | Edwin Deloso</title>
+<meta name="description" content="A practical look at validation, logging, exception handling, ProblemDetails, and why cross-cutting concerns should surround use cases instead of polluting them.">
+<meta name="author" content="Edwin Deloso"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#07111b">
+<link rel="canonical" href="https://edwindeloso.com/articles/cross-cutting-concerns-shouldnt-pollute-your-use-cases/">
+<meta property="og:type" content="article"><meta property="og:title" content="Cross-Cutting Concerns Shouldn't Pollute Your Use Cases"><meta property="og:description" content="Keep business behavior visible while making application-wide policies difficult to forget."><meta property="og:url" content="https://edwindeloso.com/articles/cross-cutting-concerns-shouldnt-pollute-your-use-cases/"><meta property="og:site_name" content="Edwin Deloso"><meta property="og:image" content="https://edwindeloso.com/assets/edwindelosologo.png"><meta property="article:published_time" content="2026-10-01"><meta property="article:author" content="Edwin Deloso">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="Cross-Cutting Concerns Shouldn't Pollute Your Use Cases | Edwin Deloso"><meta name="twitter:description" content="Cross-cutting concerns should surround the use case, not become part of the use case."><meta name="twitter:image" content="https://edwindeloso.com/assets/edwindelosologo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Cross-Cutting Concerns Shouldn't Pollute Your Use Cases","description":"A practical look at validation, logging, exception handling, ProblemDetails, and cross-cutting application policies.","datePublished":"2026-10-01","dateModified":"2026-10-01","mainEntityOfPage":"https://edwindeloso.com/articles/cross-cutting-concerns-shouldnt-pollute-your-use-cases/","author":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},"publisher":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},"keywords":[".NET","ASP.NET Core","Clean Architecture","MediatR","FluentValidation","ProblemDetails","Software Architecture"]}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8E6S5GKC9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X8E6S5GKC9');</script>
+<link rel="stylesheet" href="../../css/styles.css"></head><body>
+<header class="nav"><a class="article-brand" href="../../" aria-label="Edwin Deloso — Learning the Next Thing"><img src="../../assets/edwindelosologo.png" alt="Edwin Deloso — Learning the Next Thing"></a><nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#keep-learning">Keep Learning</a><a href="../../#contact">Contact</a></nav></header>
+<main class="article-shell"><a class="article-back" href="../../#keep-learning">← Keep Learning</a><header class="article-header"><p class="eyebrow">.NET · CLEAN ARCHITECTURE · CROSS-CUTTING CONCERNS</p><h1>Cross-Cutting Concerns Shouldn't Pollute Your Use Cases</h1><p class="article-deck">Validation, logging, and exception handling matter. That doesn't mean every use case should implement them.</p><div class="article-meta"><span>By Edwin Deloso</span><span>October 1, 2026</span><span>Keep Learning · No. 3</span></div></header>
+<article class="article-body technical-article">
+<p>When an application is small, adding a little validation or logging directly inside a handler doesn't look particularly dangerous.</p>
+<pre class="text"><code>Handle request
+  → validate
+  → log
+  → try
+      → execute business logic
+    catch
+      → log exception</code></pre>
+<p>Do this once and it looks harmless.</p>
+<p>Do it across dozens of use cases and something changes. The business logic is still there, but now you have to find it underneath infrastructure concerns repeated throughout the application.</p>
+<p>While revisiting cross-cutting concerns in a .NET application, I was reminded of a principle that sounds obvious but has significant architectural consequences:</p>
+<blockquote><p><strong>A use case should describe what the application does. Cross-cutting concerns should describe how the application consistently behaves while doing it.</strong></p></blockquote>
+<p>Those responsibilities don't necessarily belong in the same place.</p>
+
+<hr>
+<h2>Put application-wide policy around the use case</h2>
+<p>One approach is to build a request pipeline around the application handler. Validation, logging, and exception handling can execute consistently without every handler having to implement those concerns itself.</p>
+<pre class="text"><code>Request
+   ↓
+Exception handling
+   ↓
+Request logging
+   ↓
+Validation
+   ↓
+Use-case handler
+   ↓
+Result</code></pre>
+<p>The important idea isn't MediatR itself. MediatR pipeline behaviors are one implementation mechanism. The architectural lesson is that policies applying across many use cases can live around those use cases rather than inside each one.</p>
+<p>That keeps the handler focused on the behavior it actually owns.</p>
+
+<hr>
+<h2>Validation is a policy, not the use case</h2>
+<p>A command can have rules describing what a valid request looks like. FluentValidation is one way to express those rules:</p>
+<pre class="text"><code>RuleFor(c =&gt; c.Title).NotEmpty();
+RuleFor(c =&gt; c.Description).NotEmpty();
+RuleFor(c =&gt; c.Location).NotEmpty();
+
+RuleFor(c =&gt; c.EndsAtUtc)
+    .Must((cmd, endsAt) =&gt; endsAt &gt; cmd.StartsAtUtc)
+    .When(c =&gt; c.EndsAtUtc.HasValue);</code></pre>
+<p>But the handler doesn't also need to be responsible for remembering to invoke validation.</p>
+<p>If every use case has to remember:</p>
+<pre class="text"><code>Validate
+Log
+Handle exceptions
+Measure?
+Authorize?
+Execute business logic</code></pre>
+<p>then application policy depends on every developer implementing every concern correctly every time.</p>
+<p>A pipeline changes that model. The application establishes the policy once and applies it consistently.</p>
+<blockquote><p><strong>The less a guardrail depends on someone remembering it, the stronger that guardrail becomes.</strong></p></blockquote>
+
+<hr>
+<h2>Logging becomes more useful when it carries context</h2>
+<p>Centralized request logging also makes it easier to attach consistent context to application activity.</p>
+<p>Instead of scattering messages such as <code>Starting request...</code> throughout handlers, a request pipeline can enrich logs with information such as the module, request name, outcome, and failure details.</p>
+<pre class="text"><code>Module  = Events
+Request = CreateEventCommand
+Status  = Success</code></pre>
+<p>That is an important distinction between merely <em>having logs</em> and creating useful operational evidence.</p>
+<p>Scattered logging tends to produce messages. Structured logging produces context.</p>
+<p>And context is what becomes valuable when something fails in production.</p>
+
+<hr>
+<h2>Expected failures and unexpected failures are different</h2>
+<p>Another lesson that stood out to me is the separation between expected application failures and unexpected exceptions.</p>
+<p>An expected failure can be represented deliberately:</p>
+<pre class="text"><code>Validation failure → 400
+Application problem → 400
+Not found           → 404
+Conflict            → 409</code></pre>
+<p>The presentation layer can translate those outcomes into a consistent HTTP representation such as <code>ProblemDetails</code>.</p>
+<p>An unexpected exception is different. It can be logged and handled globally, ultimately becoming a server error rather than pretending to be a normal business outcome.</p>
+<p>That leads to a distinction worth keeping:</p>
+<blockquote><p><strong>Not every failure is an exception, and not every exception should become a business result.</strong></p></blockquote>
+<p>A missing entity can be expected. A validation error can be expected. A business conflict can be expected. A database connection unexpectedly disappearing is a different category of failure.</p>
+<p>Using one mechanism for everything makes those categories harder to reason about.</p>
+
+<hr>
+<h2>Cross-cutting doesn't mean “put everything in middleware”</h2>
+<p>ASP.NET Core middleware and application pipeline behaviors can both surround work, but they operate at different boundaries.</p>
+<pre class="text"><code>HTTP Request
+     ↓
+ASP.NET Core middleware
+     ↓
+Endpoint
+     ↓
+Application request pipeline
+     ↓
+Use-case handler</code></pre>
+<p>HTTP-specific concerns naturally belong closer to the HTTP pipeline. Application-request concerns naturally belong closer to the application pipeline.</p>
+<p>This keeps the application from becoming unnecessarily aware of HTTP while also keeping HTTP middleware from needing to understand every command and query.</p>
+<p>So the useful question isn't simply:</p>
+<blockquote><p><strong>Should this be middleware?</strong></p></blockquote>
+<p>It's:</p>
+<blockquote><p><strong>At which boundary does this concern belong?</strong></p></blockquote>
+
+<hr>
+<h2>The endpoint becomes pleasantly boring</h2>
+<p>Once these policies are established elsewhere, an endpoint can become an adapter between HTTP and the application:</p>
+<pre class="text"><code>HTTP request
+    ↓
+Create command
+    ↓
+Send
+    ↓
+Match result
+    ↓
+HTTP response</code></pre>
+<p>That's good boring.</p>
+<p>The endpoint doesn't need to understand validation mechanics. It doesn't need a large <code>try/catch</code>. It doesn't implement application logging or manually translate every possible failure.</p>
+<p>The surrounding policies have already been established.</p>
+
+<hr>
+<h2>There is still such a thing as too much abstraction</h2>
+<p>There is a trade-off here.</p>
+<p>Once we discover pipeline behaviors, it is tempting to put everything into them:</p>
+<pre class="text"><code>Validation
+Logging
+Transactions
+Caching
+Authorization
+Performance
+Retries
+Auditing
+Metrics
+...</code></pre>
+<p>Before long, understanding what happens before a handler executes can become difficult.</p>
+<p>Cross-cutting abstractions remove repetition, but they also introduce <strong>implicit behavior</strong>. The handler becomes cleaner while some runtime behavior becomes less visible locally.</p>
+<p>So the rule I'm taking away isn't “put everything in a pipeline.” It's:</p>
+<blockquote><p><strong>Centralize a concern when consistency across many use cases is more valuable than keeping that behavior explicit inside each use case.</strong></p></blockquote>
+<p>That's a trade-off, not a commandment.</p>
+
+<hr>
+<h2>What I'm taking away</h2>
+<p>Cross-cutting concerns aren't primarily about reducing duplicated code. They're about establishing <strong>consistent application policies</strong>.</p>
+<p>Validation says every applicable request must satisfy its rules before execution. Logging says application requests should leave useful operational evidence. Exception handling says unexpected failures should be handled consistently. Result mapping says expected application failures should have predictable HTTP representations.</p>
+<p>Once those policies are centralized, individual use cases become easier to read because they describe the behavior they're actually responsible for.</p>
+<p>Which brings me back to the principle I want to remember:</p>
+<blockquote><p><strong>A use case should describe what the application does. Cross-cutting concerns should describe how the application consistently behaves while doing it.</strong></p></blockquote>
+<p>The goal isn't abstraction for abstraction's sake.</p>
+<p>The goal is to keep business behavior visible while making application-wide policies difficult to forget.</p>
+
+<hr>
+<h2>Further Learning</h2>
+<p>This article grew out of concepts I revisited while studying <strong>Milan Jovanović's Modular Monolith Architecture</strong> material. I'm documenting the ideas that stood out to me, how I understand them, and how they connect with engineering practices I've encountered over the years.</p>
+<p>The course provides the learning context; the observations and conclusions here are my own interpretation.</p>
+<p><strong><a href="https://www.courses.milanjovanovic.tech/a/aff_l825rpg0/external?affcode=1486372_z5q14p4o" rel="noopener noreferrer">Explore Milan Jovanović's Modular Monolith Architecture course →</a></strong></p>
+<p><em>Disclosure: The course link above is an affiliate link. If you purchase through it, I may earn a commission at no additional cost to you. I've personally enrolled in Milan's architecture courses and use them as part of my continuing software architecture learning.</em></p>
+<p><strong>Learning the Next Thing.</strong></p>
+</article></main>
+<footer class="article-footer"><span>© 2026 Edwin Deloso</span><a href="../../#keep-learning">More Keep Learning notes →</a></footer>
+</body></html>
