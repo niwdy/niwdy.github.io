@@ -1,0 +1,364 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I Don't Write Every Line of Code Anymore. I Still Own Every Line. | Edwin Deloso</title>
+<meta name="description" content="How AI agents changed my SDLC from implementation-first development to AI-governed engineering—with architecture, guardrails, observability, documentation, and human ownership.">
+<meta name="author" content="Edwin Deloso"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#07111b">
+<link rel="canonical" href="https://edwindeloso.com/articles/i-dont-write-every-line-of-code-anymore-i-still-own-every-line/">
+<meta property="og:type" content="article"><meta property="og:title" content="I Don't Write Every Line of Code Anymore. I Still Own Every Line."><meta property="og:description" content="AI can generate the code. Engineers still have to engineer the system."><meta property="og:url" content="https://edwindeloso.com/articles/i-dont-write-every-line-of-code-anymore-i-still-own-every-line/"><meta property="og:site_name" content="Edwin Deloso"><meta property="og:image" content="https://edwindeloso.com/assets/edwindelosologo.png"><meta property="article:published_time" content="2026-10-03"><meta property="article:author" content="Edwin Deloso">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="I Don't Write Every Line of Code Anymore. I Still Own Every Line. | Edwin Deloso"><meta name="twitter:description" content="How AI agents changed my SDLC from implementation-first development to AI-governed engineering."><meta name="twitter:image" content="https://edwindeloso.com/assets/edwindelosologo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"I Don't Write Every Line of Code Anymore. I Still Own Every Line.","description":"How AI agents changed my SDLC from implementation-first development to AI-governed engineering.","datePublished":"2026-10-03","dateModified":"2026-10-03","mainEntityOfPage":"https://edwindeloso.com/articles/i-dont-write-every-line-of-code-anymore-i-still-own-every-line/","author":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},"publisher":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},"keywords":["AI-assisted software engineering","AI governance",".NET 10","CQRS","OpenTelemetry","Software Architecture","Technical Leadership"]}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8E6S5GKC9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X8E6S5GKC9');</script>
+<link rel="stylesheet" href="../../css/styles.css"></head><body>
+<header class="nav"><a class="article-brand" href="../../" aria-label="Edwin Deloso — Learning the Next Thing"><img src="../../assets/edwindelosologo.png" alt="Edwin Deloso — Learning the Next Thing"></a><nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#keep-learning">Keep Learning</a><a href="../../#contact">Contact</a></nav></header>
+<main class="article-shell"><a class="article-back" href="../../#keep-learning">← Keep Learning</a><header class="article-header"><p class="eyebrow">AI ERA · SOFTWARE ENGINEERING · ARCHITECTURE · AI GOVERNANCE</p><h1>I Don't Write Every Line of Code Anymore. I Still Own Every Line.</h1><p class="article-deck">How AI agents changed my SDLC from implementation-first development to AI-governed engineering.</p><div class="article-meta"><span>By Edwin Deloso</span><span>October 3, 2026</span><span>Keep Learning · No. 4</span></div></header>
+<article class="article-body technical-article">
+<p>For most of my career, building software meant writing the implementation myself.</p>
+<p>Design the solution. Create the classes. Write the business logic. Configure the database. Implement validation. Write the tests. Fix the build. Deploy. Repeat.</p>
+<p>I still do all of those things. But increasingly, <strong>I don't personally type all the code that performs them.</strong></p>
+<p>AI agents now handle a significant portion of implementation work for me.</p>
+<p>That statement can easily sound like: <em>“I let AI build my software.”</em></p>
+<p>That's not what I mean.</p>
+<p>The biggest change AI has made to my software development lifecycle isn't that I've stopped engineering. It's that <strong>my engineering effort has moved to a different level.</strong></p>
+<p>I spend more time defining intent, designing architecture, establishing constraints, creating guardrails, reviewing implementations, challenging decisions, validating behavior, thinking about production, and preserving engineering context for the people who will work on the system after me.</p>
+<p>The AI writes more of the code. <strong>I still own the engineering outcome.</strong></p>
+<hr>
+<h2>This isn't vibe coding</h2>
+<p>There's a style of AI-assisted development where you describe roughly what you want, let the model generate something, run it, and continue prompting until the application appears to work. That can be useful for prototypes and experimentation.</p>
+<p>But it's not how I want to build production systems.</p>
+<p>For production software, I don't want an AI agent deciding the architecture as it goes. <strong>I want the architecture to constrain the agent.</strong></p>
+<pre class="text"><code>Engineering Intent
+        ↓
+Architecture
+        ↓
+Standards &amp; Conventions
+        ↓
+AI Governance &amp; Guardrails
+        ↓
+Specification
+        ↓
+AI Agent Implementation
+        ↓
+Human Review
+        ↓
+Automated Validation
+        ↓
+CI/CD
+        ↓
+Production
+        ↓
+Observability
+        ↓
+Feedback &amp; Learning</code></pre>
+<p>I've started thinking of this as <strong>AI-governed development</strong>. I'm not presenting that as a formal industry methodology. It's simply the best description I've found for how my own development process is evolving.</p>
+<p>The objective isn't to give AI unlimited freedom. It's to give AI enough freedom to move quickly <strong>inside engineering boundaries that have already been established.</strong></p>
+<hr>
+<h2>A recent integration API changed how I think about this</h2>
+<p>A recent integration API I worked on made this transition particularly visible to me. It was built on <strong>.NET 10</strong>, but the interesting part wasn't the framework version or how quickly endpoints could be generated.</p>
+<p>The system had real architectural, security, delivery, and operational requirements.</p>
+<pre class="text"><code>Application Architecture
+├── .NET 10
+├── CQRS
+├── EF Core
+├── Result / Error patterns
+├── FluentValidation
+├── Global Exception Handling
+└── Cross-Cutting Concerns
+
+Security
+├── JWT Authentication
+├── RS256 asymmetric signing
+├── Protected secrets / configuration
+├── Argon2id password hashing
+└── OAuth 2.0 Client Credentials Grant
+
+Database Evolution
+├── EF Core
+├── EF Core migrations
+└── Flyway
+
+Delivery
+├── Jenkins
+├── CI/CD pipelines
+├── Automated tests
+├── Code review
+└── Quality gates
+
+Observability
+├── OpenTelemetry
+├── Structured logging
+├── Metrics
+├── Distributed traces
+├── Correlation context
+└── Centralized investigation tooling</code></pre>
+<p>AI agents helped me implement significant portions of this much faster than if I had manually typed every handler, validator, configuration class, test, migration, and supporting component.</p>
+<p>But AI didn't eliminate the need to understand why those pieces existed. If anything, <strong>the faster implementation became, the more important those engineering decisions became.</strong></p>
+<hr>
+<h2>Architecture became a guardrail</h2>
+<p>Architecture isn't merely a diagram showing developers where to put classes. With AI-assisted development, architecture also becomes a constraint on what an agent is allowed to produce.</p>
+<p>If the application uses CQRS, the agent shouldn't invent a completely different application structure for the next feature. If expected failures use an established Result/Error pattern, generated code shouldn't suddenly throw exceptions for ordinary business outcomes. If validation belongs in a common pipeline, every generated handler shouldn't invent its own validation mechanism.</p>
+<blockquote><p><strong>This is how this application behaves.</strong></p></blockquote>
+<p>That reduces architectural improvisation. And that's exactly what I want.</p>
+<hr>
+<h2>Security shows why this isn't just prompting</h2>
+<p>Authentication wasn't simply <code>Add JWT authentication → Done</code>.</p>
+<p>The API had explicit requirements around JWT authentication, asymmetric <strong>RS256 signing</strong>, protected configuration and signing-key material, <strong>Argon2id password hashing</strong>, and <strong>OAuth 2.0 Client Credentials Grant</strong> for machine-to-machine integration.</p>
+<blockquote><p><strong>Generating authentication code and designing an authentication model are different responsibilities.</strong></p></blockquote>
+<p>Someone still needs to reason about trust boundaries, choose the appropriate authentication flow, protect secrets and signing material, understand token validation and authorization behavior, and decide how those requirements will be verified before production.</p>
+<p>AI can help implement those decisions. <strong>It shouldn't silently make all of them for me.</strong></p>
+<hr>
+<h2>Cross-cutting concerns became part of the governance</h2>
+<p>I don't want every endpoint or handler deciding independently how validation, logging, and failures should work. Instead, common policies can be established through FluentValidation, global exception handling, Result/Error patterns, cross-cutting pipelines, structured logging, and OpenTelemetry.</p>
+<p>This isn't only about avoiding duplicated code. It's about making certain engineering decisions <strong>consistent by default</strong>.</p>
+<blockquote><p><strong>The less a critical guardrail depends on someone remembering it, the stronger that guardrail becomes.</strong></p></blockquote>
+<hr>
+<h2>AI governance is more than a prompt</h2>
+<p>A long prompt saying “follow the architecture, use best practices, and generate production-quality code” isn't governance. Governance needs mechanisms.</p>
+<p>So I started developing and refining <strong>repository rules, AI skills, specialized agent workflows, engineering conventions, automated validation, and production-readiness checks</strong> around the project.</p>
+<pre class="text"><code>AI Governance
+│
+├── Repository Rules
+│   ├── Architecture conventions
+│   ├── Coding standards
+│   ├── Security requirements
+│   └── Testing expectations
+│
+├── AI Skills
+│   ├── Production-readiness review
+│   ├── Security checks
+│   ├── Code-quality checks
+│   └── Test enforcement
+│
+├── Agent Workflows
+│   ├── Implementation
+│   ├── Review
+│   └── Validation
+│
+└── Automated Guardrails
+    ├── Build
+    ├── Tests
+    ├── Static analysis
+    └── CI/CD quality gates</code></pre>
+<p>At first, this can look like tooling around the “real development.” I'm beginning to see it differently. <strong>It is part of the development.</strong></p>
+<p>An instruction tells the agent what I expect. <strong>A guardrail helps detect when the implementation violates that expectation.</strong></p>
+<hr>
+<h2>Guardrails matter more when code becomes cheap</h2>
+<p>AI has made generating code remarkably inexpensive. That's powerful. But AI has also made generating <strong>bad code</strong> remarkably inexpensive.</p>
+<p>Earlier in my career, one major constraint was: <em>How quickly can I implement this?</em></p>
+<p>Now I'm increasingly concerned with whether we're implementing the right thing, respecting the architecture and security boundaries, following established patterns, proving behavior with tests, and leaving enough evidence to diagnose production problems.</p>
+<p>Code-generation speed doesn't reduce the need for engineering discipline. I think it <strong>increases it</strong>.</p>
+<hr>
+<h2>Don't silently implement something you believe is wrong</h2>
+<p>One lesson reinforced by recent professional feedback from an architect I work with is the importance of not being a passive builder.</p>
+<p>He specifically recognized that I would challenge a design when I believed something was wrong rather than simply implementing it without discussion.</p>
+<p>That matters even more now that AI agents can produce implementation so quickly. If I see an architectural concern, my responsibility isn't to quietly let the agent implement it because “that's what the design says.” It's to raise the concern.</p>
+<p>Sometimes my concern will be correct. Sometimes the architect will have context that I don't have. Sometimes the discussion will reveal a better option than either of us originally considered.</p>
+<p>The important thing is that <strong>the disagreement becomes an engineering conversation rather than a hidden assumption.</strong></p>
+<blockquote><p><strong>Respecting architecture means taking it seriously enough to question it when implementation reveals something the original design didn't anticipate.</strong></p></blockquote>
+<p>A good engineer follows the architecture. <strong>A responsible engineer also speaks up when reality gives them a reason to question it.</strong></p>
+<hr>
+<h2>Architecture and reality don't always stay identical</h2>
+<p>Requirements evolve. Integration behavior becomes clearer. Security requirements emerge. Infrastructure imposes limitations. Operational concerns appear.</p>
+<p>The dangerous part isn't that implementation can evolve. The dangerous part is when it changes <strong>silently</strong>.</p>
+<pre class="text"><code>Original Architectural Direction
+              ↓
+     Implementation Finding
+              ↓
+      Engineering Discussion
+              ↓
+        Agreed Decision
+              ↓
+      Actual Implementation
+              ↓
+ Documented Reason / Deviation
+              ↓
+   Updated Engineering Context</code></pre>
+<p>If the architecture originally suggested Approach A but we deliberately implemented Approach B, I want the next engineer to understand what was intended, what we discovered, why we challenged it, what we decided, and what is now the actual state of the system.</p>
+<p>That's not documentation for documentation's sake. It's preserving <strong>engineering intent</strong>.</p>
+<hr>
+<h2>Document the distance between architecture and reality</h2>
+<p>If documented architecture says one thing while the source code consistently does something else, what should the next AI agent follow?</p>
+<p>Without context, it might “correct” an intentional implementation decision. Or it might continue spreading a deviation that was originally supposed to be temporary.</p>
+<blockquote><p><strong>Don't just document the architecture. Document the distance between the architecture and reality.</strong></p></blockquote>
+<p>And explain why that distance exists. That gives both humans and AI agents much better context.</p>
+<hr>
+<h2>The repository became more than source code</h2>
+<p>I don't want a repository to contain only the final source code. I want it to preserve enough engineering context to explain how the system reached its current state.</p>
+<pre class="text"><code>Engineering Context
+│
+├── Architecture
+│   ├── Intended architecture
+│   ├── Architectural boundaries
+│   └── Established patterns
+│
+├── Implementation
+│   ├── What was actually implemented
+│   ├── Important implementation details
+│   └── Technical decisions
+│
+├── Change History
+│   ├── What changed
+│   ├── Why it changed
+│   └── Relevant context
+│
+├── Architecture Deviations
+│   ├── Original direction
+│   ├── Actual implementation
+│   ├── Reason for deviation
+│   └── Resulting implications
+│
+├── AI Governance
+│   ├── Repository rules
+│   ├── Skills
+│   ├── Agent workflows
+│   └── Guardrails
+│
+└── Delivery Knowledge
+    ├── Documentation
+    ├── Operational considerations
+    └── Production readiness</code></pre>
+<p>The code tells you <strong>what the system does</strong>. It doesn't always tell you <strong>why the system ended up that way</strong>.</p>
+<hr>
+<h2>Documentation became part of delivery</h2>
+<p>I used to think about documentation mostly as something that accompanied software. I'm increasingly treating it as part of the engineering deliverable itself.</p>
+<p>When I finish significant work, I'm not only asking whether it compiles, whether the tests pass, and whether the pipeline succeeded. I'm also asking whether another developer can understand what I did, whether the delivery team understands the current state, whether the architect can see where implementation differs from the original direction, and whether the business can understand what capability was actually delivered.</p>
+<pre class="text"><code>Implementation
+      +
+Tests
+      +
+Security
+      +
+CI/CD
+      +
+Observability
+      +
+Documentation
+      +
+Decision History
+      +
+Known Deviations
+      +
+Operational Context
+      =
+Engineering Delivery</code></pre>
+<p>The code is a major part of the deliverable. <strong>But the code isn't the entire deliverable.</strong></p>
+<hr>
+<h2>Different people need different context</h2>
+<p>The developer who inherits the system doesn't need exactly the same information as the architect. And the business doesn't need a detailed explanation of every CQRS handler.</p>
+<p>The next developer needs patterns, boundaries, deviations and guardrails. The delivery team needs implementation state, dependencies and operational considerations. The architect needs to understand how reality compares with architectural intent. The business needs to understand the capability, remaining risks and what it enables next.</p>
+<p>Good engineering communication doesn't mean giving everyone the same enormous technical document. It means <strong>preserving enough context that the right information can be communicated to the right audience.</strong></p>
+<hr>
+<h2>Build for the next engineer, not just the current feature</h2>
+<p>Eventually, somebody else will inherit what I build. Maybe another developer, technical lead, architect, or someone investigating a production incident months later. Increasingly, maybe another developer working with an AI agent.</p>
+<p>I don't want that person to reverse-engineer every decision I made. I want them to inherit more than source code. I want them to inherit <strong>engineering context</strong>.</p>
+<p>Instead of every developer starting over with AI, <strong>the project itself carries part of the engineering knowledge forward.</strong></p>
+<hr>
+<h2>AI governance became a knowledge-transfer mechanism</h2>
+<p>It's easy to think of guardrails as mechanisms for stopping AI from doing something wrong. But there's another purpose: <strong>knowledge transfer</strong>.</p>
+<p>We've always preserved knowledge through README files, architecture diagrams, coding standards, onboarding documents, and architecture decision records. AI introduces another possibility: some of that knowledge can become <strong>machine-consumable engineering context</strong>.</p>
+<pre class="text"><code>          ENGINEERING INTENT
+                 │
+                 ▼
+       MACHINE-READABLE GOVERNANCE
+       Rules · Skills · Agent Workflows
+                 │
+                 ▼
+          ENFORCED GUARDRAILS
+      Tests · Analysis · CI/CD · Review</code></pre>
+<p><strong>Intent explains why.</strong> Governance communicates how we expect work to be performed. Guardrails help verify that important expectations weren't ignored.</p>
+<hr>
+<h2>If the next developer needs me for everything, I haven't finished</h2>
+<p>Documentation can't replace collaboration. AI can't replace judgment. But I don't want important architectural knowledge to disappear when I close my laptop.</p>
+<p>I don't want an implementation decision to exist only because “Edwin remembers why we did that.”</p>
+<blockquote><p><strong>If the next developer needs me to explain everything before they can safely change the system, then my job isn't finished.</strong></p></blockquote>
+<p>The most valuable thing I leave behind shouldn't be the code I personally typed. It should be a system where another engineer can understand the architecture, understand the reasoning, challenge old decisions when appropriate, and continue building without depending entirely on me.</p>
+<hr>
+<h2>Observability is part of the architecture</h2>
+<p>Shipping the API wasn't the finish line. I also needed the system to tell us what it was doing after deployment.</p>
+<p>The design included <strong>OpenTelemetry, structured logs, metrics, distributed traces, and correlation context</strong>, with telemetry available to centralized investigation tooling such as Kibana.</p>
+<pre class="text"><code>Incoming Request
+       │
+       ├── Correlation Context
+       │
+       ▼
+Application / CQRS Pipeline
+       │
+       ├── Structured Logs
+       ├── Metrics
+       ├── OpenTelemetry Traces
+       └── Error / Result Context
+               │
+               ▼
+        Telemetry Platform
+               │
+               ▼
+            Kibana
+               │
+               ▼
+      Production Investigation</code></pre>
+<p>The objective wasn't simply to generate more logs. It was to make production problems <strong>investigable</strong>.</p>
+<p><strong>Logs</strong> help tell me what happened. <strong>Metrics</strong> help tell me how the system is behaving. <strong>Traces</strong> help show where time and failures traveled. <strong>Correlation context</strong> helps connect evidence belonging to the same operation.</p>
+<p>Those aren't code-generation questions. They're <strong>production-engineering questions</strong>.</p>
+<hr>
+<h2>Production gets the final vote</h2>
+<p>A generated implementation can compile. Tests can pass. Static analysis can be clean. Code review can approve it. The pipeline can deploy it. And we still haven't proven that the system will behave perfectly under real production conditions.</p>
+<p>That's why my SDLC doesn't end at deployment:</p>
+<blockquote><p><strong>Deploy → Observe → Investigate → Learn → Improve</strong></p></blockquote>
+<p>What I learn can feed back not only into the application, but also into the architecture, documentation, rules, skills, tests, and AI guardrails. <strong>The governance itself should evolve.</strong></p>
+<hr>
+<h2>The engineer still needs to understand the code</h2>
+<p>AI can allow someone to generate software they don't fully understand. That may work surprisingly well—until something goes wrong.</p>
+<p>When an EF Core query behaves badly, I still need to understand data access. When telemetry isn't enough, I still need to understand observability. When an API leaks information across a boundary, I still need to understand security. When authentication fails, I still need to understand the trust model.</p>
+<blockquote><p><strong>AI reduces the cost of implementation. It doesn't eliminate the cost of understanding.</strong></p></blockquote>
+<p>In some ways, reviewing large amounts of machine-generated code demands stronger fundamentals because I'm evaluating implementation that I didn't personally type.</p>
+<hr>
+<h2>My job has shifted from typing to directing</h2>
+<p>For years, developer productivity was closely associated with writing code. Now I can spend significant time defining a problem carefully and have an agent implement something that previously would have taken much longer to type manually.</p>
+<p>That doesn't necessarily mean I performed less engineering. Sometimes it means I concentrated more of the engineering into the decisions that matter.</p>
+<blockquote><p><strong>Define → Govern → Generate → Review → Validate → Deploy → Observe → Learn → Own</strong></p></blockquote>
+<p><strong>Define</strong> the problem. <strong>Govern</strong> the architectural, security, quality, and operational boundaries. <strong>Generate</strong> with AI agents. <strong>Review</strong> the output. <strong>Validate</strong> with tests and guardrails. <strong>Deploy</strong> through a controlled pipeline. <strong>Observe</strong> the real system. <strong>Learn</strong> from feedback. And finally, <strong>own</strong> the outcome.</p>
+<hr>
+<h2>“The AI wrote it” isn't a production incident response</h2>
+<p>I can't tell a production incident: “The AI wrote that part.”</p>
+<p>If I instructed it, reviewed it, approved it, shipped it, and operate it, then it's my software.</p>
+<p>Architecture, security, quality, observability, documentation, and production are still my responsibility.</p>
+<p><strong>AI changed who typed much of the implementation. It didn't change who owns the engineering outcome.</strong></p>
+<hr>
+<h2>Experience still matters — just differently</h2>
+<p>Another observation from recent professional feedback described me as <strong>“open-minded and quick to pick up new technology.”</strong></p>
+<p>After more than two decades working in software, I think that matters more than ever. I don't want to defend the way I built software ten years ago simply because it's familiar. But I also don't want to discard decades of engineering lessons simply because an AI can now generate code.</p>
+<blockquote><p><strong>What should change? And what engineering principles should survive the change?</strong></p></blockquote>
+<p>Earlier in my career, experience helped me write code faster. Today, experience increasingly helps me decide <strong>what code should exist in the first place</strong>.</p>
+<hr>
+<h2>This is becoming part of technical leadership for me</h2>
+<p>Technical leadership used to make me think primarily about reviewing developers' code, discussing architecture, establishing standards, and helping teammates make good engineering decisions.</p>
+<p>Those responsibilities haven't disappeared. But now there is another participant in the development process: <strong>the AI agent.</strong></p>
+<p>Creating repository rules, reusable skills, agent workflows, architecture guidance, automated guardrails, decision history, and documentation isn't separate from technical leadership. <strong>It's becoming another way I practice it.</strong></p>
+<p>Because good technical leadership isn't only about personally knowing the right answer. It's also about creating an environment where other engineers can make good decisions without constantly depending on you.</p>
+<hr>
+<h2>I'm building for whoever comes next</h2>
+<p>I started this transition thinking AI would mainly help me write code faster. It did.</p>
+<p>But the more interesting change has been what happened to my role around the code.</p>
+<p>I'm spending more of my time defining intent, designing architecture, challenging decisions, establishing governance, building guardrails, reviewing generated implementation, validating security and quality, designing observability, preserving decisions, documenting deviations, and leaving enough context for the people who come next.</p>
+<p><strong>I'm not just building for today's requirement.</strong></p>
+<p>I'm building for the next developer who will have to understand it. For the delivery team that has to support it. For the architect who needs to understand how the design evolved. For the business that needs to understand what was actually delivered. And increasingly, for the next AI agent that will eventually be asked to change it.</p>
+<blockquote><p><strong>It has moved more of my engineering effort from typing implementation to designing the environment in which implementation happens.</strong></p></blockquote>
+<p>If another developer can open that repository, understand the intent and decisions, see where reality differs from the original architecture, use the established guardrails, and safely continue the work without needing me beside them—<strong>then I built more than software. I left behind engineering context.</strong></p>
+<hr>
+<h2>I haven't stopped writing software</h2>
+<p>I just don't write every line anymore.</p>
+<p>After more than two decades in this industry, that's a strange sentence to write. I started in an era where computers needed far more explicit instructions from humans. Today I can describe intent to an AI agent and watch it implement a substantial part of a system.</p>
+<p>But responsibility hasn't moved with the typing.</p>
+<p><strong>Architecture is still mine to understand. Security is still mine to question. Quality is still mine to protect. Production is still mine to observe. Context is still mine to preserve. The outcome is still mine to own.</strong></p>
+<p>AI helped me move faster because I no longer have to manually type every implementation detail. Governance lets me move faster without surrendering engineering control. Observability makes sure that control doesn't end at deployment. Documentation and decision history help make sure the engineering knowledge doesn't end with me.</p>
+<blockquote><p><strong>AI can generate the code. Engineers still have to engineer the system.</strong></p></blockquote>
+<p>Or, to put it another way:</p>
+<blockquote><p><strong>Some developers became managers. I became the guy reviewing code written by robots. 🤖</strong></p></blockquote>
+<p>And apparently, now I also have to leave documentation explaining to the next developer why the robots did what they did. 😄</p>
+<p><strong>Learning the Next Thing.</strong></p>
+<hr>
+<p><em>Some observations in this article are informed by professional feedback I received during my 2026 performance cycle. The excerpts are included as context for my engineering experience and do not represent an endorsement by my employer.</em></p>
+</article></main>
+<footer class="article-footer"><span>© 2026 Edwin Deloso</span><a href="../../#keep-learning">More Keep Learning notes →</a></footer>
+</body></html>
