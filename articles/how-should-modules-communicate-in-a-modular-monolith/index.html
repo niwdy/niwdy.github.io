@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How Should Modules Communicate in a Modular Monolith? | Edwin Deloso</title>
+<meta name="description" content="A practical look at module communication in a modular monolith using domain events, synchronous public APIs, integration events, and asynchronous messaging.">
+<meta name="author" content="Edwin Deloso"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#07111b">
+<link rel="canonical" href="https://edwindeloso.com/articles/how-should-modules-communicate-in-a-modular-monolith/">
+<meta property="og:type" content="article"><meta property="og:title" content="How Should Modules Communicate in a Modular Monolith?"><meta property="og:description" content="Modularity isn't about preventing modules from communicating. It's about controlling how they communicate."><meta property="og:url" content="https://edwindeloso.com/articles/how-should-modules-communicate-in-a-modular-monolith/"><meta property="og:site_name" content="Edwin Deloso"><meta property="og:image" content="https://edwindeloso.com/assets/edwindelosologo.png"><meta property="article:published_time" content="2026-10-06"><meta property="article:author" content="Edwin Deloso">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="How Should Modules Communicate in a Modular Monolith? | Edwin Deloso"><meta name="twitter:description" content="Domain events, public module APIs, and integration events: choosing how modules collaborate without destroying their boundaries."><meta name="twitter:image" content="https://edwindeloso.com/assets/edwindelosologo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How Should Modules Communicate in a Modular Monolith?","description":"A practical look at module communication in a modular monolith using domain events, synchronous public APIs, integration events, and asynchronous messaging.","datePublished":"2026-10-06","dateModified":"2026-10-06","mainEntityOfPage":"https://edwindeloso.com/articles/how-should-modules-communicate-in-a-modular-monolith/","author":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso","url":"https://edwindeloso.com/"},"publisher":{"@type":"Person","@id":"https://edwindeloso.com/#person","name":"Edwin Deloso"},"keywords":[".NET","Modular Monolith","Domain Events","Integration Events","MassTransit","Module Communication","Software Architecture"]}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8E6S5GKC9"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-X8E6S5GKC9');</script>
+<link rel="stylesheet" href="../../css/styles.css"></head><body>
+<header class="nav"><a class="article-brand" href="../../" aria-label="Edwin Deloso — Learning the Next Thing"><img src="../../assets/edwindelosologo.png" alt="Edwin Deloso — Learning the Next Thing"></a><nav><a href="../../#story">Story</a><a href="../../#journey">Journey</a><a href="../../#notes">Engineering Notes</a><a href="../../#keep-learning">Keep Learning</a><a href="../../#contact">Contact</a></nav></header>
+<main class="article-shell"><a class="article-back" href="../../#keep-learning">← Keep Learning</a><header class="article-header"><p class="eyebrow">.NET · MODULAR MONOLITH · MODULE COMMUNICATION</p><h1>How Should Modules Communicate in a Modular Monolith?</h1><p class="article-deck">What domain events, public module APIs, and integration events taught me about preserving module boundaries.</p><div class="article-meta"><span>By Edwin Deloso</span><span>October 6, 2026</span><span>Keep Learning · No. 5</span></div></header>
+<article class="article-body technical-article"><p>One thing I like about studying software architecture is that solving one problem usually reveals the next one.</p>
+<p>I recently spent more time learning about modular monolith architecture. One lesson had already become clearer to me: modularity is not primarily about folders or projects. It is about <strong>ownership</strong>.</p>
+<p>A module should own its domain logic, its data, and the implementation details behind its boundary.</p>
+<p>That sounds straightforward—until the modules need to talk to each other.</p>
+<p>If the <strong>Ticketing</strong> module needs information owned by <strong>Users</strong>, should it query the Users database directly? If a new user registers and Ticketing needs to create its own customer representation, should Users call Ticketing directly? Should everything use events? Should everything be synchronous?</p>
+<blockquote><p><strong>Modularity isn't about preventing modules from communicating. It's about controlling how they communicate.</strong></p></blockquote>
+<p>That became the next thing worth learning.</p>
+<hr>
+<h2>The problem starts after we create the boundary</h2>
+<p>Imagine an application containing several business modules:</p>
+<pre class="text"><code>Events
+Users
+Ticketing
+Orders
+Payments</code></pre>
+<p>Each module owns a particular business capability. Keeping those responsibilities separate gives us useful boundaries. But eventually Ticketing needs to know something about a user, or something happens in Users that Ticketing needs to react to.</p>
+<p>At that point, the easy solution is often: <em>just access the other module.</em></p>
+<p>And that's where modularity can slowly disappear.</p>
+<hr>
+<h2>Don't reach into another module's internals</h2>
+<p>Suppose Ticketing needs user information. Because everything lives inside the same application, it might technically be possible for Ticketing to access the Users persistence model directly:</p>
+<pre class="text"><code>Ticketing
+    ↓
+UsersDbContext
+    ↓
+Users table</code></pre>
+<p>That may work, but now Ticketing understands details about how Users stores its data. Change the Users implementation and Ticketing may also need to change.</p>
+<p>A better approach is to give the module an explicit public API:</p>
+<pre class="text"><code>Ticketing
+    ↓
+IUsersApi
+    ↓
+Users Module</code></pre>
+<p>The same idea applies to Events:</p>
+<pre class="text"><code>Ticketing
+    ↓
+IEventsApi
+    ↓
+Events Module</code></pre>
+<blockquote><p><strong>A module can expose capabilities without exposing its internals.</strong></p></blockquote>
+<hr>
+<h2>Synchronous communication has a place</h2>
+<p>It would be easy to learn asynchronous messaging and conclude that modules should always communicate through events. I don't think that's a useful rule.</p>
+<p>Sometimes one module genuinely needs information from another module <strong>right now</strong>.</p>
+<p>Consider adding a ticket to a customer's cart. Ticketing may need to know whether the customer exists, whether the ticket type exists, its price, and its currency. The operation cannot reasonably continue until those questions have answers.</p>
+<pre class="text"><code>AddItemToCart
+      │
+      ├────► Users Module
+      │       Get customer
+      │◄────
+      │
+      ├────► Events Module
+      │       Get ticket type
+      │◄────
+      │
+      ▼
+Continue operation</code></pre>
+<p>That's synchronous module communication, and there is nothing inherently wrong with it. The important part is where the dependency points: Ticketing depends on the module's public contract, not its internal implementation.</p>
+<hr>
+<h2>A public contract should really be public</h2>
+<p>Another detail I found important is that a module does not have to expose its internal application response model directly to another module.</p>
+<pre class="text"><code>Internal Users query
+       ↓
+Internal response
+       ↓
+Mapping
+       ↓
+Public API response
+       ↓
+Ticketing</code></pre>
+<p>That may look like additional mapping code, but it protects the boundary. If the internal Users application model changes, consumers should not automatically be forced to change with it.</p>
+<blockquote><p><strong>A module's public contract should belong to the module boundary, not leak its internal implementation model.</strong></p></blockquote>
+<p>Some duplication between internal and public models can therefore be intentional. It is the price of encapsulation.</p>
+<hr>
+<h2>But synchronous communication still creates coupling</h2>
+<p>A public API protects implementation boundaries. It does <strong>not</strong> eliminate coupling.</p>
+<p>If Ticketing cannot complete an operation without Users responding, Ticketing still has a runtime dependency on Users. Within a modular monolith that may be perfectly acceptable. But if we let synchronous dependencies grow without discipline, we can end up with:</p>
+<pre class="text"><code>Module A → Module B → Module C → Module D → Module E</code></pre>
+<p>We've preserved project boundaries while creating a dependency chain.</p>
+<p>So the useful question isn't whether synchronous communication is good or bad. It is:</p>
+<blockquote><p><strong>Does the consuming module actually need an answer from the other module before it can continue?</strong></p></blockquote>
+<p>If yes, synchronous communication may be exactly what we want. But sometimes the requirement is different. Sometimes something has simply <strong>happened</strong>.</p>
+<hr>
+<h2>Something happened in the domain</h2>
+<p>Before communication crosses module boundaries, there is another useful concept: <strong>domain events</strong>.</p>
+<p>Suppose an Event aggregate is published. Instead of the application layer manually changing state and deciding everything that should happen afterward, the aggregate performs its business operation:</p>
+<pre class="text"><code>event.Publish();</code></pre>
+<p>Internally, the aggregate changes its state and raises something conceptually like:</p>
+<pre class="text"><code>EventPublishedDomainEvent</code></pre>
+<p>The aggregate knows that it was published. It doesn't necessarily need to know every application behavior that may react afterward.</p>
+<blockquote><p><strong>Business events should originate where the business decision is made.</strong></p></blockquote>
+<hr>
+<h2>Raising an event isn't the same as publishing it</h2>
+<p>This distinction was subtle but important. An entity can record domain events without taking responsibility for dispatching them.</p>
+<pre class="text"><code>DOMAIN
+Aggregate
+   ↓
+Raise domain event
+   ↓
+Store event temporarily
+
+INFRASTRUCTURE
+SaveChanges
+   ↓
+Find domain events
+   ↓
+Publish them
+   ↓
+Handlers react</code></pre>
+<p>In the implementation I studied, EF Core's save pipeline participates in collecting domain events and publishing them through MediatR.</p>
+<blockquote><p><strong>Recording a domain event and dispatching a domain event are different responsibilities.</strong></p></blockquote>
+<p>The domain records what happened. Infrastructure helps deliver that information to interested application behavior.</p>
+<hr>
+<h2>Domain events don't automatically belong to everyone</h2>
+<p>This becomes even more important when another module needs to know what happened.</p>
+<p>Imagine a user registers. Inside Users, that may produce a <code>UserRegisteredDomainEvent</code>. Ticketing also needs to react by creating its own customer representation.</p>
+<p>It might be tempting to expose the domain event directly to Ticketing. But then an internal concept from Users becomes part of the contract between modules.</p>
+<p>Instead, we can translate the internal event into an explicit <strong>integration event</strong>:</p>
+<pre class="text"><code>             USERS MODULE
+
+User.Register()
+      ↓
+UserRegisteredDomainEvent
+      ↓
+Domain Event Handler
+      ↓
+UserRegisteredIntegrationEvent
+      │
+──────┼──── MODULE BOUNDARY ──────
+      │
+      ▼
+             EVENT BUS
+      │
+      ▼
+           TICKETING MODULE
+
+Integration Event Consumer
+      ↓
+CreateCustomerCommand</code></pre>
+<p>A <strong>domain event</strong> represents something meaningful that happened inside a domain or module. An <strong>integration event</strong> represents something the module intentionally exposes so other modules can react.</p>
+<blockquote><p><strong>Domain events describe what happened inside a boundary. Integration events communicate what other boundaries are allowed to know about it.</strong></p></blockquote>
+<p>Not every internal domain event needs to become an integration contract.</p>
+<hr>
+<h2>The producer owns the fact. The consumer owns the reaction.</h2>
+<p>This may be my favorite lesson from the whole exercise.</p>
+<p>Users knows: <strong>a user registered.</strong></p>
+<p>Ticketing decides: <strong>when a user registers, I need to create a customer.</strong></p>
+<p>Those are different responsibilities.</p>
+<pre class="text"><code>             UserRegistered
+                   │
+       ┌───────────┼───────────┐
+       ▼           ▼           ▼
+   Ticketing   Notifications  Analytics</code></pre>
+<p>Users publishes the fact. Each consumer decides what that fact means to its own domain.</p>
+<blockquote><p><strong>The producer owns the fact. The consumer owns the reaction.</strong></p></blockquote>
+<p>This is where asynchronous communication becomes less about messaging technology and more about <strong>module autonomy</strong>.</p>
+<hr>
+<h2>The message broker isn't the main idea</h2>
+<p>The asynchronous implementation uses an event-bus abstraction backed by MassTransit, and at this stage the transport can even be configured in-memory.</p>
+<p>It's easy to see names such as MassTransit, RabbitMQ, Kafka, or Azure Service Bus and think that's what event-driven architecture is about. Those are infrastructure choices.</p>
+<p>The more important architectural seam already exists:</p>
+<pre class="text"><code>Domain Event
+      ↓
+Integration Event
+      ↓
+Event Bus abstraction
+      ↓
+Consumer</code></pre>
+<blockquote><p><strong>Architecture can establish the seam before infrastructure needs to occupy it.</strong></p></blockquote>
+<p>Good architecture doesn't necessarily introduce maximum infrastructure immediately. It creates boundaries that allow infrastructure to evolve when the application actually needs it.</p>
+<hr>
+<h2>Synchronous or asynchronous?</h2>
+<p>After looking at both approaches, I don't think the useful question is which one is better.</p>
+<p>A better question is:</p>
+<blockquote><p><strong>What does the consuming module need?</strong></p></blockquote>
+<p>If it needs information immediately, synchronous communication through an explicit public module API can be a natural fit. If it needs to react independently to something that already happened, an integration event may be a better fit.</p>
+<p>Neither approach eliminates complexity. It changes <strong>where the complexity lives</strong>.</p>
+<pre class="text"><code>SYNCHRONOUS
+Question / immediate decision
+        ↓
+Public Module API
+        ↓
+Immediate response
+
+ASYNCHRONOUS
+Something happened
+        ↓
+Integration Event
+        ↓
+Independent reaction</code></pre>
+<hr>
+<h2>Independence has a price</h2>
+<p>Asynchronous communication gives us useful properties: independent consumers, reduced temporal coupling, and easier extensibility.</p>
+<p>But it also introduces new questions.</p>
+<p>What if the consumer fails? What if the same event arrives twice? What if processing succeeds but acknowledgement fails? What if the database transaction succeeds but publishing the integration event fails? How do we retry safely? How do we trace one business operation across asynchronous boundaries?</p>
+<pre class="text"><code>Asynchronous Communication
+        ↓
+Reliability
+        ↓
+Consistency
+        ↓
+Retries
+        ↓
+Idempotency
+        ↓
+Observability</code></pre>
+<blockquote><p><strong>Asynchronous communication reduces temporal and structural coupling, but increases operational complexity.</strong></p></blockquote>
+<p>That's a trade-off worth making when the problem requires it. It shouldn't be introduced merely because messaging feels architecturally sophisticated.</p>
+<hr>
+<h2>The next problem is already waiting</h2>
+<p>This is probably the part I enjoy most about learning architecture. Every solution seems to reveal another problem.</p>
+<pre class="text"><code>Module Boundaries
+       ↓
+Module Communication
+       ↓
+Domain Events
+       ↓
+Integration Events
+       ↓
+Asynchronous Processing
+       ↓
+Reliability
+       ↓
+Outbox
+       ↓
+Idempotency
+       ↓
+Observability
+       ↓
+???</code></pre>
+<p>We separated the modules, then had to decide how they communicate. We introduced integration events, then had to think about reliability. Once communication becomes asynchronous, questions about the Outbox Pattern, duplicate delivery, idempotency, tracing, structured logging, and correlation naturally follow.</p>
+<p>The concepts aren't isolated. One architectural decision exposes the next engineering problem worth understanding.</p>
+<hr>
+<h2>Architecture is a chain of trade-offs</h2>
+<p>I'm increasingly finding that learning architecture isn't about memorizing patterns.</p>
+<p>It's easy to collect terminology: DDD, CQRS, Domain Events, Integration Events, MassTransit, Outbox, OpenTelemetry.</p>
+<p>Knowing the names doesn't necessarily mean understanding the architecture.</p>
+<p>The questions I find more useful are:</p>
+<ul><li><strong>What problem am I solving?</strong></li><li><strong>What boundary am I protecting?</strong></li><li><strong>What coupling am I introducing?</strong></li><li><strong>What new failure mode does this decision create?</strong></li><li><strong>What complexity am I accepting in return for the benefit?</strong></li></ul>
+<p>So I wouldn't say always use events between modules, or never call another module synchronously.</p>
+<blockquote><p><strong>Use synchronous communication when the current operation genuinely needs an answer.<br><br>Use asynchronous communication when another module needs to react independently to something that happened.<br><br>Use domain events to represent meaningful events inside the domain.<br><br>Use explicit integration contracts when those events cross module boundaries.</strong></p></blockquote>
+<p>And most importantly:</p>
+<blockquote><p><strong>Don't introduce a pattern because the architecture diagram looks better with it. Introduce it because you understand the problem it solves—and the problems it creates.</strong></p></blockquote>
+<hr>
+<h2>Continue learning</h2>
+<p>This article reflects lessons I took from studying modular monolith architecture and experimenting with domain events, synchronous module APIs, integration events, and asynchronous communication.</p>
+<p>If you want to study these concepts in greater depth, I recommend Milan Jovanović's <a href="https://www.courses.milanjovanovic.tech/a/aff_l825rpg0/external?affcode=1486372_z5q14p4o" rel="sponsored noopener noreferrer" target="_blank"><strong>Modular Monolith Architecture</strong></a> course.</p>
+<p>The course goes deeper into module boundaries, communication patterns, domain and integration events, messaging, reliability, and the architectural decisions behind them.</p>
+<p class="disclosure"><em>Disclosure: This is an affiliate link. If you purchase through it, I may earn a commission at no additional cost to you. I've personally enrolled in Milan's architecture courses and use them as part of my continuing software architecture learning.</em></p>
+<div class="closing"><p>Every time I understand one architectural decision a little better, it seems to uncover another question.</p><p>And that's fine.</p><p>That's usually where the next lesson begins.</p><p><strong>Learning the Next Thing.</strong></p></div>
+</article></main>
+<footer class="article-footer"><span>© 2026 Edwin Deloso</span><a href="../../#keep-learning">More Keep Learning notes →</a></footer>
+<script src="../../js/main.js"></script></body></html>
